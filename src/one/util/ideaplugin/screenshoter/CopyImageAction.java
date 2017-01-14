@@ -1,4 +1,4 @@
-package one.util.ideaplugin.copier;
+package one.util.ideaplugin.screenshoter;
 
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.editor.*;

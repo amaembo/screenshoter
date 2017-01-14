@@ -1,40 +1,27 @@
 <idea-plugin>
-  <id>com.your.company.unique.plugin.id</id>
-  <name>Plugin display name here</name>
+  <id>one.util.ideaplugin.screenshoter</id>
+  <name>Code screenshots</name>
   <version>1.0</version>
-  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+  <vendor email="amaembo@gmail.com" url="http://github.com/amaembo/">Tagir Valeev</vendor>
 
   <description><![CDATA[
-      Enter short description for your plugin here.<br>
-      <em>most HTML tags may be used</em>
+      Select a code and press a hot-key (Ctrl+Alt+Shift+Q by default)
+      to copy it as the image (make a screenshot).
     ]]></description>
 
   <change-notes><![CDATA[
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>
     ]]>
   </change-notes>
 
-  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-  <idea-version since-build="145.0"/>
+  <idea-version since-build="162.0"/>
 
-  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
-       on how to target different products -->
-  <!-- uncomment to enable plugin in all products
   <depends>com.intellij.modules.lang</depends>
-  -->
-
-  <extensions defaultExtensionNs="com.intellij">
-    <!-- Add your extensions here -->
-  </extensions>
 
   <actions>
-    <!-- Add your actions here -->
-    <action id="one.util.ideaplugin.copier.CopyImageAction" class="one.util.ideaplugin.copier.CopyImageAction"
+    <action id="one.util.ideaplugin.screenshoter.CopyImageAction" class="one.util.ideaplugin.screenshoter.CopyImageAction"
             text="Copy as image" description="Copy the selection as image">
       <add-to-group group-id="EditMenu" anchor="last"/>
       <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt Q"/>
     </action>
   </actions>
-
 </idea-plugin>
