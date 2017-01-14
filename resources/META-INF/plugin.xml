@@ -30,6 +30,11 @@
 
   <actions>
     <!-- Add your actions here -->
+    <action id="one.util.ideaplugin.copier.CopyImageAction" class="one.util.ideaplugin.copier.CopyImageAction"
+            text="Copy as image" description="Copy the selection as image">
+      <add-to-group group-id="EditMenu" anchor="last"/>
+      <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt Q"/>
+    </action>
   </actions>
 
 </idea-plugin>
