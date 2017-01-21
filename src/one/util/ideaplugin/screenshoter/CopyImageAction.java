@@ -42,13 +42,13 @@ public class CopyImageAction extends AnAction {
         selectionModel.setSelection(0, 0);
 
         CaretModel caretModel = editor.getCaretModel();
+        Document document = editor.getDocument();
         int offset = caretModel.getOffset();
         CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
         if (options.myRemoveCaret) {
-            caretModel.moveToOffset(0);
+            caretModel.moveToOffset(start == 0 ? document.getLineEndOffset(document.getLineCount() - 1) : 0);
         }
 
-        Document document = editor.getDocument();
         String text = document.getText(new TextRange(start, end));
 
         Rectangle r = new Rectangle();
