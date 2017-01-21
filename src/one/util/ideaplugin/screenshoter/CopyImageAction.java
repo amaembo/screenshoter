@@ -18,10 +18,6 @@ import java.util.regex.Pattern;
  * @author Tagir Valeev
  */
 public class CopyImageAction extends AnAction {
-    private int myScale = 4;
-    private boolean myRemoveCaret = true;
-    private boolean myChopIndentation = true;
-
     private static final Pattern EMPTY_SUFFIX = Pattern.compile("\n\\s+$");
 
     private void includePoint(Rectangle r, Point p) {
@@ -47,7 +43,8 @@ public class CopyImageAction extends AnAction {
 
         CaretModel caretModel = editor.getCaretModel();
         int offset = caretModel.getOffset();
-        if(myRemoveCaret) {
+        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
+        if (options.myRemoveCaret) {
             caretModel.moveToOffset(0);
         }
 
@@ -56,7 +53,7 @@ public class CopyImageAction extends AnAction {
 
         Rectangle r = new Rectangle();
         for(int i=start; i<=end; i++) {
-            if(myChopIndentation &&
+            if (options.myChopIndentation &&
                     EMPTY_SUFFIX.matcher(text.substring(0, Math.min(i-start+1, text.length()))).find()) {
                 continue;
             }
@@ -73,10 +70,11 @@ public class CopyImageAction extends AnAction {
 
         JComponent contentComponent = editor.getContentComponent();
 
-        BufferedImage image = UIUtil.createImage(r.width* myScale, r.height* myScale, BufferedImage.TYPE_INT_RGB);
+        double scale = options.myScale;
+        BufferedImage image = UIUtil.createImage((int) (r.width * scale), (int) (r.height * scale), BufferedImage.TYPE_INT_RGB);
         Graphics2D g = (Graphics2D) image.getGraphics();
         AffineTransform at = new AffineTransform();
-        at.scale(myScale, myScale);
+        at.scale(scale, scale);
         at.translate(-r.x, -r.y);
         g.setTransform(at);
         contentComponent.paint(g);

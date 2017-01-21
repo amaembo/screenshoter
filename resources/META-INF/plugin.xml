@@ -2,7 +2,7 @@
   <id>one.util.ideaplugin.screenshoter</id>
   <name>Code screenshots</name>
   <version>1.0</version>
-  <vendor email="amaembo@gmail.com" url="http://github.com/amaembo/">Tagir Valeev</vendor>
+  <vendor email="amaembo@gmail.com" url="https://github.com/amaembo/screenshoter/">Tagir Valeev</vendor>
 
   <description><![CDATA[
       Select a code and press a hot-key (Ctrl+Alt+Shift+Q by default)
@@ -24,4 +24,8 @@
       <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt Q"/>
     </action>
   </actions>
+  <extensions defaultExtensionNs="com.intellij">
+    <projectService serviceImplementation="one.util.ideaplugin.screenshoter.CopyImageOptionsProvider"/>
+    <projectConfigurable groupId="editor" instance="one.util.ideaplugin.screenshoter.CopyImageConfigurable" id="screenshoter" displayName="Copy image options" />
+  </extensions>
 </idea-plugin>
