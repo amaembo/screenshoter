@@ -1,15 +1,21 @@
 <idea-plugin>
   <id>one.util.ideaplugin.screenshoter</id>
   <name>Code screenshots</name>
-  <version>1.0</version>
-  <vendor email="amaembo@gmail.com" url="https://github.com/amaembo/screenshoter/">Tagir Valeev</vendor>
+  <version>1.2</version>
+  <vendor email="tagir.valeev@jetbrains.com" url="https://github.com/amaembo/screenshoter/">Tagir Valeev</vendor>
 
   <description><![CDATA[
-      Select a code and press a hot-key (Ctrl+Alt+Shift+Q by default)
-      to copy it as the image (make a screenshot).
+      <p>Select a code and press a hot-key (Ctrl+Alt+Shift+A by default)
+      to copy it as the image (make a screenshot).</p>
+      <p>Default hot-key can be changed in Settings|Keymap (search for "Copy as image" action)</p>
+      <p>Some plugin options are available under Editor|Copy image options</p>
     ]]></description>
 
   <change-notes><![CDATA[
+      <ul>
+        <li>Version 1.2: IDEA 2017.1 support, HiDPI mode support; default hot-key changed to Ctrl+Alt+Shift+A.</li>
+        <li>Version 1.1: options page added (Editor|Copy image options); minor fixes.</li>
+      </ul>
     ]]>
   </change-notes>
 
@@ -21,7 +27,7 @@
     <action id="one.util.ideaplugin.screenshoter.CopyImageAction" class="one.util.ideaplugin.screenshoter.CopyImageAction"
             text="Copy as image" description="Copy the selection as image">
       <add-to-group group-id="EditMenu" anchor="last"/>
-      <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt Q"/>
+      <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt A"/>
     </action>
   </actions>
   <extensions defaultExtensionNs="com.intellij">
