@@ -5,3 +5,7 @@ Simple IDEA plugin which allows you to take code screenshots. Just select code b
 on Mac).
 
 Installation page is [here](https://plugins.jetbrains.com/idea/plugin/9406-code-screenshots).
+
+## Example
+
+![a screenshot of some code in Idea](https://i.imgur.com/uytIFMy.jpg)
