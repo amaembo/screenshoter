@@ -1,9 +1,15 @@
 package one.util.ideaplugin.screenshoter;
 
+import com.intellij.openapi.fileChooser.FileChooserDescriptor;
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.ui.TextFieldWithHistoryWithBrowseButton;
+import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.ui.SwingHelper;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,9 +22,11 @@ import javax.swing.*;
 public class CopyImageConfigurable implements SearchableConfigurable, Configurable.NoScroll {
     private CopyImageOptionsPanel myPanel;
     private final CopyImageOptionsProvider myManager;
+    private final Project myProject;
 
     public CopyImageConfigurable(CopyImageOptionsProvider manager, Project project) {
         myManager = manager;
+        this.myProject = project;
     }
 
     @Nls
@@ -67,7 +75,7 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
         myPanel = null;
     }
 
-    public static class CopyImageOptionsPanel {
+    public class CopyImageOptionsPanel {
         private static final double SLIDER_SCALE = 2;
 
         private JTextField myScale;
@@ -75,6 +83,8 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
         private JCheckBox myRemoveCaret;
         private JPanel myWholePanel;
         private JSlider mySlider;
+        private JPanel mySaveDirectoryPanel;
+        private TextFieldWithHistoryWithBrowseButton mySaveDirectory;
 
         CopyImageOptionsProvider.State toState() {
             CopyImageOptionsProvider.State state = new CopyImageOptionsProvider.State();
@@ -84,17 +94,30 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
                 state.myScale = Double.parseDouble(myScale.getText().trim());
             } catch (NumberFormatException ignored) {
             }
+
+            state.myDirectoryToSave = StringUtil.nullize(mySaveDirectory.getText());
             return state;
         }
 
         void fromState(CopyImageOptionsProvider.State state) {
             myChopIndentation.setSelected(state.myChopIndentation);
             myRemoveCaret.setSelected(state.myRemoveCaret);
-            mySlider.setValue((int) (state.myScale*SLIDER_SCALE));
+            mySlider.setValue((int) (state.myScale * SLIDER_SCALE));
+            mySaveDirectory.setText(StringUtil.notNullize(state.myDirectoryToSave));
         }
 
         void init() {
-            mySlider.addChangeListener(e -> myScale.setText(String.valueOf(mySlider.getValue()/SLIDER_SCALE)));
+            mySlider.addChangeListener(e -> myScale.setText(String.valueOf(mySlider.getValue() / SLIDER_SCALE)));
+        }
+
+        private void createUIComponents() {
+            FileChooserDescriptor singleFolderDescriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
+            TextFieldWithHistoryWithBrowseButton field = SwingHelper.createTextFieldWithHistoryWithBrowseButton(myProject,
+                    "Save to directory",
+                    singleFolderDescriptor,
+                    ContainerUtil::emptyList);
+            mySaveDirectoryPanel = field;
+            mySaveDirectory = field;
         }
     }
 }

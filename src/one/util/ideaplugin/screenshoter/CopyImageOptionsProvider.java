@@ -3,7 +3,6 @@ package one.util.ideaplugin.screenshoter;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -34,6 +33,7 @@ public class CopyImageOptionsProvider implements PersistentStateComponent<CopyIm
         myState.myScale = state.myScale;
         myState.myRemoveCaret = state.myRemoveCaret;
         myState.myChopIndentation = state.myChopIndentation;
+        myState.myDirectoryToSave = state.myDirectoryToSave;
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -41,18 +41,23 @@ public class CopyImageOptionsProvider implements PersistentStateComponent<CopyIm
         public double myScale = 4;
         public boolean myRemoveCaret = true;
         public boolean myChopIndentation = true;
+        public String myDirectoryToSave = null;
 
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             State state = (State) o;
-            return Double.compare(state.myScale, myScale) == 0 && myRemoveCaret == state.myRemoveCaret && myChopIndentation == state.myChopIndentation;
+            return Double.compare(state.myScale, myScale) == 0 &&
+                    myRemoveCaret == state.myRemoveCaret &&
+                    myChopIndentation == state.myChopIndentation &&
+                    Objects.equals(myDirectoryToSave, state.myDirectoryToSave);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(myScale, myRemoveCaret, myChopIndentation);
+
+            return Objects.hash(myScale, myRemoveCaret, myChopIndentation, myDirectoryToSave);
         }
     }
 }
