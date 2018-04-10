@@ -16,6 +16,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
+import static com.intellij.codeInsight.hint.EditorFragmentComponent.getBackgroundColor;
+
 public class ImageBuilder {
     private static final Pattern EMPTY_SUFFIX = Pattern.compile("\n\\s+$");
 
@@ -29,7 +31,7 @@ public class ImageBuilder {
         }
         utilCreateImage = method;
     }
-    
+
     @NotNull
     private final Editor editor;
 
@@ -46,8 +48,10 @@ public class ImageBuilder {
         selectionModel.setSelection(0, 0);
 
         CaretModel caretModel = editor.getCaretModel();
+        
         Document document = editor.getDocument();
         int offset = caretModel.getOffset();
+        
         CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
         if (options.myRemoveCaret) {
             caretModel.moveToOffset(start == 0 ? document.getLineEndOffset(document.getLineCount() - 1) : 0);
@@ -77,12 +81,35 @@ public class ImageBuilder {
         }
 
         newTransform.translate(-r.getX(), -r.getY());
-        BufferedImage image = paint(contentComponent, newTransform,
+        BufferedImage editorImage = paint(contentComponent, newTransform,
                 (int) (r.getWidth() * scale), (int) (r.getHeight() * scale));
+        BufferedImage image = padding(options, editor, editorImage);
 
         selectionModel.setSelection(start, end);
         caretModel.moveToOffset(offset);
         return image;
+    }
+
+
+    private BufferedImage padding(CopyImageOptionsProvider.State options,
+                                  @NotNull Editor editor,
+                                  @NotNull BufferedImage image) {
+        int padding = options.myPadding;
+        if (padding == 0) return image;
+
+        int sizeX = image.getWidth() + padding * 2;
+        int sizeY = image.getHeight() + padding * 2;
+        //noinspection UndesirableClassUsage / already scaled
+        BufferedImage newImage = new BufferedImage(sizeX, sizeY, BufferedImage.TYPE_INT_RGB);
+        
+        Color backgroundColor = getBackgroundColor(editor, false);
+        Graphics g = newImage.getGraphics();
+        g.setColor(backgroundColor);
+        g.fillRect(0, 0, sizeX, sizeY);
+        g.drawImage(image, padding, padding, null);
+        g.dispose();
+
+        return newImage;
     }
 
     private static void includePoint(Rectangle2D r, Point2D p) {
