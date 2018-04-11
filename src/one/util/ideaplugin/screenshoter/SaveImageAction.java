@@ -49,10 +49,12 @@ public class SaveImageAction extends AnAction {
             SimpleDateFormat dt = new SimpleDateFormat("yyyyymmdd_hhmmss");
             String date = dt.format(new Date());
 
-            File outputfile = new File(FileUtil.toSystemDependentName(toSave + "/" + "Shot_" + date + ".png"));
-            ImageIO.write(image, "png", outputfile);
+            File outFile = new File(FileUtil.toSystemDependentName(toSave + "/" + "Shot_" + date + ".png"));
+            FileUtil.createParentDirs(outFile);
 
-            NOTIFICATION_GROUP.createNotification("Image \n" + outputfile.getPath() + "\nwas saved",
+            ImageIO.write(image, "png", outFile);
+
+            NOTIFICATION_GROUP.createNotification("Image \n" + outFile.getPath() + "\nwas saved",
                     MessageType.INFO).notify(project);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -64,6 +66,4 @@ public class SaveImageAction extends AnAction {
         Presentation presentation = event.getPresentation();
         presentation.setEnabled(CopyImageAction.geEditor(event) != null);
     }
-
-
 }

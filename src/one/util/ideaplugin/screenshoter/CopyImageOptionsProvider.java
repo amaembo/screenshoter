@@ -29,7 +29,7 @@ public class CopyImageOptionsProvider implements PersistentStateComponent<CopyIm
     }
 
     @Override
-    public void loadState(State state) {
+    public void loadState(@NotNull State state) {
         myState.myScale = state.myScale;
         myState.myRemoveCaret = state.myRemoveCaret;
         myState.myChopIndentation = state.myChopIndentation;

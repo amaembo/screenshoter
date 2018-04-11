@@ -1,23 +1,16 @@
 package one.util.ideaplugin.screenshoter;
 
 import com.intellij.openapi.actionSystem.*;
-import com.intellij.openapi.editor.*;
-import com.intellij.openapi.util.TextRange;
-import com.intellij.util.ui.UIUtil;
+import com.intellij.openapi.editor.Editor;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
 import java.awt.*;
-import java.awt.datatransfer.*;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.regex.Pattern;
 
 /**
  * @author Tagir Valeev
@@ -55,6 +48,7 @@ public class CopyImageAction extends AnAction {
             this.image = image;
         }
 
+        @NotNull
         public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
             if (flavor.equals(DataFlavor.imageFlavor) && image != null) {
                 return image;

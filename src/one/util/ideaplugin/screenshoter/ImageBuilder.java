@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 import static com.intellij.codeInsight.hint.EditorFragmentComponent.getBackgroundColor;
 
-public class ImageBuilder {
+class ImageBuilder {
     private static final Pattern EMPTY_SUFFIX = Pattern.compile("\n\\s+$");
 
     private static final Method utilCreateImage;
