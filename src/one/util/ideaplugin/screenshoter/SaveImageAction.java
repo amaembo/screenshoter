@@ -16,6 +16,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 
@@ -37,7 +39,6 @@ public class SaveImageAction extends AnAction {
         saveImage(editor, image);
     }
 
-
     private void saveImage(@NotNull Editor editor, @NotNull BufferedImage image) {
         Project project = editor.getProject();
         CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(project).getState();
@@ -45,19 +46,22 @@ public class SaveImageAction extends AnAction {
         if (StringUtil.isEmpty(toSave)) {
             toSave = SystemProperties.getUserHome();
         }
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+        String date = formatter.format(now);
+        File outFile = new File(FileUtil.toSystemDependentName(toSave + "/" + "Shot_" + date + ".png"));
         try {
-            SimpleDateFormat dt = new SimpleDateFormat("yyyyymmdd_hhmmss");
-            String date = dt.format(new Date());
-
-            File outFile = new File(FileUtil.toSystemDependentName(toSave + "/" + "Shot_" + date + ".png"));
             FileUtil.createParentDirs(outFile);
 
             ImageIO.write(image, "png", outFile);
 
-            NOTIFICATION_GROUP.createNotification("Image \n" + outFile.getPath() + "\nwas saved",
-                    MessageType.INFO).notify(project);
+            NOTIFICATION_GROUP
+                    .createNotification("Image \n" + outFile.getPath() + "\nwas saved", MessageType.INFO)
+                    .notify(project);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            NOTIFICATION_GROUP
+                    .createNotification("Cannot save image:  " + outFile.getPath() + ":\n" + StringUtil.notNullize(e.getLocalizedMessage()), MessageType.ERROR)
+                    .notify(project);
         }
     }
 

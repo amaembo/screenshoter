@@ -33,7 +33,6 @@
             class="one.util.ideaplugin.screenshoter.SaveImageAction"
             text="Save as image" description="Save the selection as image">
       <add-to-group group-id="EditMenu" anchor="last"/>
-      <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt S"/>
     </action>
   </actions>
   <extensions defaultExtensionNs="com.intellij">
