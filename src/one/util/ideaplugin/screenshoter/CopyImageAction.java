@@ -2,6 +2,7 @@ package one.util.ideaplugin.screenshoter;
 
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.ui.MessageType;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -9,8 +10,9 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.IOException;
 import java.util.Arrays;
+
+import static one.util.ideaplugin.screenshoter.CopyImagePlugin.NOTIFICATION_GROUP;
 
 /**
  * @author Tagir Valeev
@@ -19,7 +21,7 @@ public class CopyImageAction extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent event) {
-        Editor editor = getEditor(event);
+        Editor editor = CopyImagePlugin.getEditor(event);
         if (editor == null) return;
 
         Image image = new ImageBuilder(editor).createImage();
@@ -28,17 +30,15 @@ public class CopyImageAction extends AnAction {
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(transferableImage, (clipboard1, contents) -> {
         });
+        NOTIFICATION_GROUP
+                .createNotification("Image was copied to the clipboard", MessageType.INFO)
+                .notify(editor.getProject());
     }
     
     @Override
     public void update(AnActionEvent event) {
         Presentation presentation = event.getPresentation();
-        presentation.setEnabled(getEditor(event) != null);
-    }
-
-    static Editor getEditor(@NotNull AnActionEvent event) {
-        DataContext dataContext = event.getDataContext();
-        return PlatformDataKeys.EDITOR.getData(dataContext);
+        presentation.setEnabled(CopyImagePlugin.getEditor(event) != null);
     }
 
     static class TransferableImage implements Transferable {

@@ -1,7 +1,5 @@
 package one.util.ideaplugin.screenshoter;
 
-import com.intellij.notification.NotificationDisplayType;
-import com.intellij.notification.NotificationGroup;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
@@ -21,16 +19,9 @@ import java.time.format.DateTimeFormatter;
 
 public class SaveImageAction extends AnAction {
 
-    private static final NotificationGroup NOTIFICATION_GROUP = new NotificationGroup(
-            "image.saved.id",
-            NotificationDisplayType.STICKY_BALLOON,
-            false,
-            null
-    );
-
     @Override
     public void actionPerformed(AnActionEvent anActionEvent) {
-        Editor editor = CopyImageAction.getEditor(anActionEvent);
+        Editor editor = CopyImagePlugin.getEditor(anActionEvent);
         if (editor == null) return;
 
         BufferedImage image = new ImageBuilder(editor).createImage();
@@ -53,11 +44,11 @@ public class SaveImageAction extends AnAction {
 
             ImageIO.write(image, "png", outFile);
 
-            NOTIFICATION_GROUP
+            CopyImagePlugin.NOTIFICATION_GROUP
                     .createNotification("Image \n" + outFile.getPath() + "\nwas saved", MessageType.INFO)
                     .notify(project);
         } catch (IOException e) {
-            NOTIFICATION_GROUP
+            CopyImagePlugin.NOTIFICATION_GROUP
                     .createNotification("Cannot save image:  " + outFile.getPath() + ":\n" + StringUtil.notNullize(e.getLocalizedMessage()), MessageType.ERROR)
                     .notify(project);
         }
@@ -66,6 +57,6 @@ public class SaveImageAction extends AnAction {
     @Override
     public void update(AnActionEvent event) {
         Presentation presentation = event.getPresentation();
-        presentation.setEnabled(CopyImageAction.getEditor(event) != null);
+        presentation.setEnabled(CopyImagePlugin.getEditor(event) != null);
     }
 }
