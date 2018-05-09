@@ -1,6 +1,10 @@
 package one.util.ideaplugin.screenshoter;
 
-import com.intellij.openapi.actionSystem.*;
+import com.intellij.notification.NotificationListener;
+import com.intellij.notification.NotificationType;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
@@ -10,14 +14,23 @@ import com.intellij.util.SystemProperties;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import static one.util.ideaplugin.screenshoter.CopyImagePlugin.NOTIFICATION_GROUP;
+
 
 public class SaveImageAction extends AnAction {
+
+    private static final DateTimeFormatter DATE_TIME_PATTERN = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
     @Override
     public void actionPerformed(AnActionEvent anActionEvent) {
@@ -35,23 +48,46 @@ public class SaveImageAction extends AnAction {
         if (StringUtil.isEmpty(toSave)) {
             toSave = SystemProperties.getUserHome();
         }
+        toSave = toSave.trim();
         LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
-        String date = formatter.format(now);
-        File outFile = new File(FileUtil.toSystemDependentName(toSave + "/" + "Shot_" + date + ".png"));
+        String date = DATE_TIME_PATTERN.format(now);
+        String fileName = "Shot_" + date + ".png";
+        Path path = Paths.get(FileUtil.toSystemDependentName(toSave), fileName);
         try {
-            FileUtil.createParentDirs(outFile);
+            Files.createDirectories(path.getParent());
 
-            ImageIO.write(image, "png", outFile);
+            try (OutputStream os = Files.newOutputStream(path)) {
+                ImageIO.write(image, "png", os);
+            }
 
-            CopyImagePlugin.NOTIFICATION_GROUP
-                    .createNotification("Image \n" + outFile.getPath() + "\nwas saved", MessageType.INFO)
+            String pathRepresentation = StringUtil.escapeXml(StringUtil.shortenPathWithEllipsis(path.toString(), 50));
+            NotificationListener listener = (notification, hyperlinkEvent) -> {
+                try {
+                    Desktop.getDesktop().open(path.toFile());
+                } catch (IOException e) {
+                    showError(project, "Cannot open image:  " + StringUtil.escapeXml(
+                            path.toString()) + ":<br>" + StringUtil.escapeXml(
+                            StringUtil.notNullize(e.getLocalizedMessage())));
+                }
+            };
+            String openLink = Desktop.isDesktopSupported() ? "<a href=''>Open</a>" : "";
+            NOTIFICATION_GROUP
+                    .createNotification("Image was saved:",
+                            pathRepresentation + "<br>" + openLink,
+                            NotificationType.INFORMATION, listener)
                     .notify(project);
+        } catch (FileAlreadyExistsException e) {
+            showError(project, "Cannot save image:  " + StringUtil.escapeXml(
+                    path.toString()) + ":<br>Not a directory: " + StringUtil.escapeXml(e.getFile()));
         } catch (IOException e) {
-            CopyImagePlugin.NOTIFICATION_GROUP
-                    .createNotification("Cannot save image:  " + outFile.getPath() + ":\n" + StringUtil.notNullize(e.getLocalizedMessage()), MessageType.ERROR)
-                    .notify(project);
+            showError(project, "Cannot save image:  " + StringUtil.escapeXml(
+                    path.toString()) + ":<br>" + StringUtil.escapeXml(
+                    StringUtil.notNullize(e.getLocalizedMessage())));
         }
+    }
+
+    private void showError(Project project, String error) {
+        NOTIFICATION_GROUP.createNotification(error, MessageType.ERROR).notify(project);
     }
 
     @Override
