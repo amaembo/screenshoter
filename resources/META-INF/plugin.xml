@@ -1,18 +1,20 @@
 <idea-plugin>
   <id>one.util.ideaplugin.screenshoter</id>
   <name>Code screenshots</name>
-  <version>1.2</version>
+  <version>1.3</version>
   <vendor email="tagir.valeev@jetbrains.com" url="https://github.com/amaembo/screenshoter/">Tagir Valeev</vendor>
 
   <description><![CDATA[
       <p>Select a code and press a hot-key (Ctrl+Alt+Shift+A by default)
       to copy it as the image (make a screenshot).</p>
       <p>Default hot-key can be changed in Settings|Keymap (search for "Copy as image" action)</p>
+      <p>Additional "Save as image" action is available which allows to save PNG file</p>
       <p>Some plugin options are available under Editor|Copy image options</p>
     ]]></description>
 
   <change-notes><![CDATA[
       <ul>
+        <li>Version 1.3: Padding option; "Save as image" action</li>
         <li>Version 1.2: IDEA 2017.1 support, HiDPI mode support; default hot-key changed to Ctrl+Alt+Shift+A.</li>
         <li>Version 1.1: options page added (Editor|Copy image options); minor fixes.</li>
       </ul>
