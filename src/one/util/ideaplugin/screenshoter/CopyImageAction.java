@@ -49,7 +49,7 @@ public class CopyImageAction extends AnAction {
         }
 
         @NotNull
-        public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
+        public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
             if (flavor.equals(DataFlavor.imageFlavor) && image != null) {
                 return image;
             }

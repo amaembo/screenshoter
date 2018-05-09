@@ -61,7 +61,7 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
     }
 
     @Override
-    public void apply() throws ConfigurationException {
+    public void apply() {
         myManager.loadState(myPanel.toState());
     }
 
