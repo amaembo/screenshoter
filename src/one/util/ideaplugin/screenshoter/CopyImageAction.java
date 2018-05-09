@@ -19,7 +19,7 @@ public class CopyImageAction extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent event) {
-        Editor editor = geEditor(event);
+        Editor editor = getEditor(event);
         if (editor == null) return;
 
         Image image = new ImageBuilder(editor).createImage();
@@ -33,10 +33,10 @@ public class CopyImageAction extends AnAction {
     @Override
     public void update(AnActionEvent event) {
         Presentation presentation = event.getPresentation();
-        presentation.setEnabled(geEditor(event) != null);
+        presentation.setEnabled(getEditor(event) != null);
     }
 
-    static Editor geEditor(@NotNull AnActionEvent event) {
+    static Editor getEditor(@NotNull AnActionEvent event) {
         DataContext dataContext = event.getDataContext();
         return PlatformDataKeys.EDITOR.getData(dataContext);
     }

@@ -15,10 +15,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 
 
 public class SaveImageAction extends AnAction {
@@ -32,7 +30,7 @@ public class SaveImageAction extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent anActionEvent) {
-        Editor editor = CopyImageAction.geEditor(anActionEvent);
+        Editor editor = CopyImageAction.getEditor(anActionEvent);
         if (editor == null) return;
 
         BufferedImage image = new ImageBuilder(editor).createImage();
@@ -68,6 +66,6 @@ public class SaveImageAction extends AnAction {
     @Override
     public void update(AnActionEvent event) {
         Presentation presentation = event.getPresentation();
-        presentation.setEnabled(CopyImageAction.geEditor(event) != null);
+        presentation.setEnabled(CopyImageAction.getEditor(event) != null);
     }
 }
