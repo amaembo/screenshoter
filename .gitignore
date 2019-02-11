@@ -1,0 +1,7 @@
+# IntelliJ
+.idea/
+.gradle/
+out/
+build/
+# File-based project format
+*.iws
