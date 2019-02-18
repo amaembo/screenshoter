@@ -19,9 +19,10 @@ import javax.swing.*;
  * @author Tagir Valeev
  */
 public class CopyImageConfigurable implements SearchableConfigurable, Configurable.NoScroll {
-    private CopyImageOptionsPanel myPanel;
+
     private final CopyImageOptionsProvider myManager;
     private final Project myProject;
+    private CopyImageOptionsPanel myPanel;
 
     public CopyImageConfigurable(CopyImageOptionsProvider manager, Project project) {
         myManager = manager;
@@ -34,16 +35,16 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
         return "Copy code as image";
     }
 
-    @NotNull
-    @Override
-    public String getId() {
-        return "screenshoter";
-    }
-
     @Nullable
     @Override
     public String getHelpTopic() {
         return null;
+    }
+
+    @NotNull
+    @Override
+    public String getId() {
+        return "screenshoter";
     }
 
     @Nullable
@@ -75,6 +76,7 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
     }
 
     public class CopyImageOptionsPanel {
+
         private static final double SLIDER_SCALE = 2;
 
         private JTextField myScale;
@@ -84,6 +86,12 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
         private JSlider mySlider;
         private JPanel mySaveDirectoryPanel;
         private JTextField myPadding;
+        private JCheckBox myEnableGutter;
+        private JCheckBox myShowLineNumber;
+        private JCheckBox myShowGutterIcon;
+        private JCheckBox myShowFoldOutline;
+        private JCheckBox myShowIndentGuide;
+        private JCheckBox myShowInnerWhitespace;
         private TextFieldWithHistoryWithBrowseButton mySaveDirectory;
 
         CopyImageOptionsProvider.State toState() {
@@ -101,6 +109,13 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
             } catch (NumberFormatException ignored) {
             }
 
+            state.myShowIndentGuide = myShowIndentGuide.isSelected();
+            state.myShowInnerWhitespace = myShowInnerWhitespace.isSelected();
+
+            state.myEnableGutter = myEnableGutter.isSelected();
+            state.myShowLineNumber = myShowLineNumber.isSelected();
+            state.myShowGutterIcon = myShowGutterIcon.isSelected();
+            state.myShowFoldOutline = myShowFoldOutline.isSelected();
             return state;
         }
 
@@ -110,15 +125,34 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
             mySlider.setValue((int) (state.myScale * SLIDER_SCALE));
             mySaveDirectory.setText(StringUtil.notNullize(state.myDirectoryToSave));
             myPadding.setText(String.valueOf(state.myPadding));
+
+            myShowIndentGuide.setSelected(state.myShowIndentGuide);
+            myShowInnerWhitespace.setSelected(state.myShowInnerWhitespace);
+
+            boolean enableGutter = state.myEnableGutter;
+            myEnableGutter.setSelected(enableGutter);
+            myShowLineNumber.setSelected(state.myShowLineNumber);
+            myShowGutterIcon.setSelected(state.myShowGutterIcon);
+            myShowFoldOutline.setSelected(state.myShowFoldOutline);
+            myShowLineNumber.setEnabled(enableGutter);
+            myShowGutterIcon.setEnabled(enableGutter);
+            myShowFoldOutline.setEnabled(enableGutter);
         }
 
         void init() {
             mySlider.addChangeListener(e -> myScale.setText(String.valueOf(mySlider.getValue() / SLIDER_SCALE)));
+            myEnableGutter.addActionListener(e -> {
+                boolean enableGutter = myEnableGutter.isSelected();
+                myShowLineNumber.setEnabled(enableGutter);
+                myShowGutterIcon.setEnabled(enableGutter);
+                myShowFoldOutline.setEnabled(enableGutter);
+            });
         }
 
         private void createUIComponents() {
             FileChooserDescriptor singleFolderDescriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
-            TextFieldWithHistoryWithBrowseButton field = SwingHelper.createTextFieldWithHistoryWithBrowseButton(myProject,
+            TextFieldWithHistoryWithBrowseButton field = SwingHelper.createTextFieldWithHistoryWithBrowseButton(
+                    myProject,
                     "Save to directory",
                     singleFolderDescriptor,
                     ContainerUtil::emptyList);

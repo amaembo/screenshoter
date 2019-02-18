@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 import static com.intellij.codeInsight.hint.EditorFragmentComponent.getBackgroundColor;
 
-class ImageBuilder {
+class ImageBuilder implements ImageProvider {
     private static final Pattern EMPTY_SUFFIX = Pattern.compile("\n\\s+$");
 
     private static final Method utilCreateImage;
@@ -33,14 +33,20 @@ class ImageBuilder {
     }
 
     @NotNull
-    private final Editor editor;
+    private final CopyImageOptionsProvider.State options;
 
-    ImageBuilder(@NotNull Editor editor) {
-        this.editor = editor;
+    ImageBuilder(@NotNull CopyImageOptionsProvider.State options) {
+        this.options = options;
+    }
+
+    @Override
+    public boolean isCapable(Editor editor) {
+        return true;
     }
 
     @NotNull
-    BufferedImage createImage() {
+    @Override
+    public BufferedImage takeScreenshot(Editor editor) {
         SelectionModel selectionModel = editor.getSelectionModel();
         int start = selectionModel.getSelectionStart();
         int end = selectionModel.getSelectionEnd();
@@ -52,7 +58,6 @@ class ImageBuilder {
         Document document = editor.getDocument();
         int offset = caretModel.getOffset();
         
-        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
         if (options.myRemoveCaret) {
             caretModel.moveToOffset(start == 0 ? document.getLineEndOffset(document.getLineCount() - 1) : 0);
         }
@@ -75,7 +80,7 @@ class ImageBuilder {
                 continue;
             }
             VisualPosition pos = editor.offsetToVisualPosition(i);
-            Point2D point = getPoint(editor, pos);
+            Point2D point = editor.visualPositionToXY(pos);
             includePoint(r, point);
             includePoint(r, new Point2D.Double(point.getX(), point.getY() + editor.getLineHeight()));
         }
@@ -83,7 +88,7 @@ class ImageBuilder {
         newTransform.translate(-r.getX(), -r.getY());
         BufferedImage editorImage = paint(contentComponent, newTransform,
                 (int) (r.getWidth() * scale), (int) (r.getHeight() * scale));
-        BufferedImage image = padding(options, editor, editorImage);
+        BufferedImage image = padding(editor, editorImage);
 
         selectionModel.setSelection(start, end);
         caretModel.moveToOffset(offset);
@@ -91,8 +96,7 @@ class ImageBuilder {
     }
 
 
-    private BufferedImage padding(CopyImageOptionsProvider.State options,
-                                  @NotNull Editor editor,
+    private BufferedImage padding(@NotNull Editor editor,
                                   @NotNull BufferedImage image) {
         int padding = options.myPadding;
         if (padding == 0) return image;
@@ -138,9 +142,5 @@ class ImageBuilder {
         graphics.setTransform(at);
         contentComponent.paint(graphics);
         return img;
-    }
-
-    private static Point2D getPoint(Editor editor, VisualPosition pos) {
-        return editor.visualPositionToXY(pos);
     }
 }

@@ -1,6 +1,7 @@
 package one.util.ideaplugin.screenshoter;
 
-import com.intellij.notification.NotificationListener;
+
+import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -33,11 +34,24 @@ public class SaveImageAction extends AnAction {
     private static final DateTimeFormatter DATE_TIME_PATTERN = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
     @Override
-    public void actionPerformed(AnActionEvent anActionEvent) {
+    @SuppressWarnings("Duplicates")
+    public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
         Editor editor = CopyImagePlugin.getEditor(anActionEvent);
         if (editor == null) return;
 
-        BufferedImage image = new ImageBuilder(editor).createImage();
+        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
+        ImageProvider provider = ImageProvider.forOption(options);
+        if (!provider.isCapable(editor)) {
+            provider = ImageProvider.defaultProvider(options);
+        }
+
+        BufferedImage image;
+        try {
+            image = provider.takeScreenshot(editor);
+        } catch (ScreenshotException e) {
+            if (e.hide) return;
+            throw e;
+        }
         saveImage(editor, image);
     }
 
@@ -61,28 +75,42 @@ public class SaveImageAction extends AnAction {
             }
 
             String pathRepresentation = StringUtil.escapeXml(StringUtil.shortenPathWithEllipsis(path.toString(), 50));
-            NotificationListener listener = (notification, hyperlinkEvent) -> {
-                try {
-                    Desktop.getDesktop().open(path.toFile());
-                } catch (IOException e) {
-                    showError(project, "Cannot open image:  " + StringUtil.escapeXml(
-                            path.toString()) + ":<br>" + StringUtil.escapeXml(
-                            StringUtil.notNullize(e.getLocalizedMessage())));
-                }
-            };
-            String openLink = Desktop.isDesktopSupported() ? "<a href=''>Open</a>" : "";
-            NOTIFICATION_GROUP
-                    .createNotification("Image was saved:",
-                            pathRepresentation + "<br>" + openLink,
-                            NotificationType.INFORMATION, listener)
-                    .notify(project);
+            Notification notification = NOTIFICATION_GROUP
+                    .createNotification(
+                            UiBundle.message("notify.saveToDisk"),
+                            null,
+                            pathRepresentation,
+                            NotificationType.INFORMATION
+                    );
+
+            if (Desktop.isDesktopSupported()) {
+                notification.addAction(new AnAction("Open") {
+                    @Override
+                    public void actionPerformed(@NotNull AnActionEvent event) {
+                        try {
+                            Desktop.getDesktop().open(path.toFile());
+                        } catch (IllegalArgumentException e) {
+                            // file doesn't exist
+                        } catch (IOException e) {
+                            String message = UiBundle.message("notify.error.cannotOpen",
+                                    StringUtil.escapeXml(path.toString()),
+                                    StringUtil.escapeXml(StringUtil.notNullize(e.getLocalizedMessage())));
+                            showError(project, message);
+                        }
+                    }
+                });
+            }
+            notification.notify(project);
         } catch (FileAlreadyExistsException e) {
-            showError(project, "Cannot save image:  " + StringUtil.escapeXml(
-                    path.toString()) + ":<br>Not a directory: " + StringUtil.escapeXml(e.getFile()));
+            String message = UiBundle.message("notify.error.notDirectory",
+                    StringUtil.escapeXml(path.toString()),
+                    StringUtil.escapeXml(e.getFile()));
+            showError(project, message);
         } catch (IOException e) {
-            showError(project, "Cannot save image:  " + StringUtil.escapeXml(
-                    path.toString()) + ":<br>" + StringUtil.escapeXml(
-                    StringUtil.notNullize(e.getLocalizedMessage())));
+            String message = UiBundle.message("notify.error.ioe",
+                    StringUtil.escapeXml(path.toString()),
+                    StringUtil.escapeXml(StringUtil.notNullize(e.getLocalizedMessage())));
+            showError(project, message);
         }
     }
 

@@ -1,6 +1,9 @@
 package one.util.ideaplugin.screenshoter;
 
-import com.intellij.openapi.actionSystem.*;
+
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.ui.MessageType;
 import org.jetbrains.annotations.NotNull;
@@ -20,23 +23,35 @@ import static one.util.ideaplugin.screenshoter.CopyImagePlugin.NOTIFICATION_GROU
 public class CopyImageAction extends AnAction {
 
     @Override
-    public void actionPerformed(AnActionEvent event) {
+    @SuppressWarnings("Duplicates")
+    public void actionPerformed(@NotNull AnActionEvent event) {
         Editor editor = CopyImagePlugin.getEditor(event);
         if (editor == null) return;
 
-        Image image = new ImageBuilder(editor).createImage();
+        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
+        ImageProvider provider = ImageProvider.forOption(options);
+        if (!provider.isCapable(editor)) {
+            provider = ImageProvider.defaultProvider(options);
+        }
+        Image image;
+        try {
+            image = provider.takeScreenshot(editor);
+        } catch (ScreenshotException e) {
+            if (e.hide) return;
+            throw e;
+        }
 
         TransferableImage transferableImage = new TransferableImage(image);
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(transferableImage, (clipboard1, contents) -> {
         });
         NOTIFICATION_GROUP
-                .createNotification("Image was copied to the clipboard", MessageType.INFO)
+                .createNotification(UiBundle.message("notify.copyToClipboard"), MessageType.INFO)
                 .notify(editor.getProject());
     }
     
     @Override
-    public void update(AnActionEvent event) {
+    public void update(@NotNull AnActionEvent event) {
         Presentation presentation = event.getPresentation();
         presentation.setEnabled(CopyImagePlugin.getEditor(event) != null);
     }
