@@ -6,6 +6,7 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.io.FileUtil;
@@ -37,7 +38,7 @@ public class SaveImageAction extends AnAction {
         Editor editor = CopyImagePlugin.getEditor(anActionEvent);
         if (editor == null) return;
 
-        BufferedImage image = new ImageBuilder(editor).createImage();
+        BufferedImage image = new ImageBuilder((EditorEx) editor).createImage();
         saveImage(editor, image);
     }
 
@@ -91,8 +92,8 @@ public class SaveImageAction extends AnAction {
     }
 
     @Override
-    public void update(AnActionEvent event) {
+    public void update(@NotNull AnActionEvent event) {
         Presentation presentation = event.getPresentation();
-        presentation.setEnabled(CopyImagePlugin.getEditor(event) != null);
+        presentation.setEnabled(CopyImagePlugin.getEditor(event) instanceof EditorEx);
     }
 }

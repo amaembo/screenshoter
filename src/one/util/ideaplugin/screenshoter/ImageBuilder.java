@@ -2,40 +2,31 @@ package one.util.ideaplugin.screenshoter;
 
 
 import com.intellij.openapi.editor.*;
+import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.editor.ex.SoftWrapModelEx;
+import com.intellij.openapi.editor.ex.util.EditorUtil;
+import com.intellij.openapi.editor.impl.softwrap.SoftWrapDrawingType;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.regex.Pattern;
 
 import static com.intellij.codeInsight.hint.EditorFragmentComponent.getBackgroundColor;
 
 class ImageBuilder {
-    private static final Pattern EMPTY_SUFFIX = Pattern.compile("\n\\s+$");
-
-    private static final Method utilCreateImage;
-
-    static {
-        Method method = null;
-        try {
-            method = UIUtil.class.getMethod("createImage", Component.class, int.class, int.class, int.class);
-        } catch (NoSuchMethodException ignored) {
-        }
-        utilCreateImage = method;
-    }
 
     @NotNull
-    private final Editor editor;
+    private final EditorEx editor;
 
-    ImageBuilder(@NotNull Editor editor) {
+    ImageBuilder(@NotNull EditorEx editor) {
         this.editor = editor;
     }
 
@@ -57,8 +48,6 @@ class ImageBuilder {
             caretModel.moveToOffset(start == 0 ? document.getLineEndOffset(document.getLineCount() - 1) : 0);
         }
 
-        String text = document.getText(new TextRange(start, end));
-
         double scale = options.myScale;
         JComponent contentComponent = editor.getContentComponent();
         Graphics2D contentGraphics = (Graphics2D) contentComponent.getGraphics();
@@ -67,18 +56,8 @@ class ImageBuilder {
         newTransform.scale(scale, scale);
         // To flush glyph cache
         paint(contentComponent, newTransform, 1, 1);
-        Rectangle2D r = new Rectangle2D.Double();
 
-        for (int i = start; i <= end; i++) {
-            if (options.myChopIndentation &&
-                    EMPTY_SUFFIX.matcher(text.substring(0, Math.min(i - start + 1, text.length()))).find()) {
-                continue;
-            }
-            VisualPosition pos = editor.offsetToVisualPosition(i);
-            Point2D point = getPoint(editor, pos);
-            includePoint(r, point);
-            includePoint(r, new Point2D.Double(point.getX(), point.getY() + editor.getLineHeight()));
-        }
+        Rectangle2D r = calculateSelectionArea(options, editor, start, end);
 
         newTransform.translate(-r.getX(), -r.getY());
         BufferedImage editorImage = paint(contentComponent, newTransform,
@@ -112,35 +91,153 @@ class ImageBuilder {
         return newImage;
     }
 
-    private static void includePoint(Rectangle2D r, Point2D p) {
-        if (r.isEmpty()) {
-            r.setFrame(p, new Dimension(1, 1));
+    private Rectangle2D calculateSelectionArea(CopyImageOptionsProvider.State options, EditorEx editor, int selectionStart, int selectionEnd) {
+        Rectangle2D selectedView = new Rectangle2D.Double();
+
+        String selectedText = editor.getDocument().getText(
+                new TextRange(selectionStart, selectionEnd));
+
+        SoftWrapModelEx wrapModel = editor.getSoftWrapModel();
+        int symbolWidth1 = wrapModel.getMinDrawingWidthInPixels(SoftWrapDrawingType.BEFORE_SOFT_WRAP_LINE_FEED);
+        int symbolWidth2 = wrapModel.getMinDrawingWidthInPixels(SoftWrapDrawingType.AFTER_SOFT_WRAP);
+        int wsCharWidth = EditorUtil.charWidth(' ', Font.PLAIN, editor);
+
+        int leftEdge = 0;
+        int upperEdge = 0;
+        int rightEdge = 0;
+        int bottomEdge = 0;
+        if (selectedText.isEmpty()) { // user select nothing
+            int lineCount = editor.getDocument().getLineCount();
+
+            for (int i = 0; i <= lineCount; i++) {
+                // add soft warp stops
+                for (SoftWrap softWrap : wrapModel.getSoftWrapsForLine(i)) {
+                    Point point = Compatibility.offsetToXY(editor, softWrap.getStart() - 1);
+                    rightEdge = Math.max(rightEdge, point.x + wsCharWidth + symbolWidth1);
+                }
+                // add line ends
+                LogicalPosition lastColumn = new LogicalPosition(i, Integer.MAX_VALUE);
+                int offset = editor.logicalPositionToOffset(lastColumn);
+                Point point = Compatibility.offsetToXY(editor, offset);
+                rightEdge = Math.max(rightEdge, point.x);
+                bottomEdge = point.y;
+            }
+            bottomEdge += editor.getLineHeight();
         } else {
-            r.add(p);
+            boolean indentRegion = true;
+
+            if (options.myChopIndentation) {
+                leftEdge = Integer.MAX_VALUE;
+            }
+
+            for (int i = selectionStart; i <= selectionEnd; i++) {
+                VisualPosition pointOnScreen = editor.offsetToVisualPosition(i);
+                Point upperLeft = editor.visualPositionToXY(pointOnScreen);
+
+                if (i == selectionStart) {
+                    upperEdge = upperLeft.y;
+                } else if (i == selectionEnd) {
+                    bottomEdge = upperLeft.y;
+                } else {
+                    rightEdge = Math.max(rightEdge, upperLeft.x);
+
+                    char current = selectedText.charAt(i - selectionStart);
+                    if (current == '\n') {
+                        indentRegion = true;
+                    } else if (indentRegion && !Character.isWhitespace(current)) {
+                        indentRegion = false;
+                        if (options.myChopIndentation) {
+                            leftEdge = Math.min(leftEdge, upperLeft.x);
+                        }
+                    }
+
+                    if (!wrapModel.isSoftWrappingEnabled()) {
+                        continue;
+                    }
+                    if (wrapModel.getSoftWrap(i) != null) { // wrap sign on visual line start
+                        leftEdge = Math.min(leftEdge, upperLeft.x - symbolWidth2);
+                    }
+                    if (wrapModel.getSoftWrap(i + 1) != null) { // wrap sign on visual line end
+                        rightEdge = Math.max(rightEdge, upperLeft.x + wsCharWidth + symbolWidth1);
+                    }
+                }
+            }
+            if (selectedText.charAt(selectedText.length() - 1) != '\n') {
+                bottomEdge += editor.getLineHeight();
+            }
         }
+        Dimension contentSize = editor.getContentSize();
+        // there is a small cut off on right edge of the last character,
+        // so extend width by 1 scaled pixel.
+        contentSize.width = rightEdge - leftEdge + JBUI.scale(1);
+        contentSize.height = bottomEdge - upperEdge;
+        selectedView.setFrame(new Point(leftEdge, upperEdge), contentSize);
+        return selectedView;
     }
 
     @NotNull
     private static BufferedImage paint(JComponent contentComponent, AffineTransform at, int width, int height) {
-        BufferedImage img = null;
-        if (utilCreateImage != null) {
-            try {
-                img = (BufferedImage) utilCreateImage.invoke(null, contentComponent, width, height, BufferedImage
-                        .TYPE_INT_RGB);
-            } catch (IllegalAccessException | InvocationTargetException ignored) {
-            }
-        }
-        if (img == null) {
-            //noinspection UndesirableClassUsage
-            img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        }
+        BufferedImage img = Compatibility.createImage(width, height, BufferedImage.TYPE_INT_RGB);
+
         Graphics2D graphics = (Graphics2D) img.getGraphics();
         graphics.setTransform(at);
         contentComponent.paint(graphics);
         return img;
     }
 
-    private static Point2D getPoint(Editor editor, VisualPosition pos) {
-        return editor.visualPositionToXY(pos);
+    @SuppressWarnings({"JavadocReference", "SameParameterValue", "JavaReflectionMemberAccess"})
+    private static class Compatibility {
+        /**
+         * {@link com.intellij.util.ui.UIUtil#createImage(int, int, int)}
+         */
+        private static final Method utilCreateImage;
+
+        /**
+         * {@link com.intellij.openapi.editor.Editor#offsetToXY(int)}
+         */
+        private static final Method editorOffsetToXY;
+
+        static {
+            Method method;
+
+            method = null;
+            try {
+                method = UIUtil.class.getMethod("createImage", int.class, int.class, int.class);
+            } catch (NoSuchMethodException ignored) {
+            }
+            utilCreateImage = method;
+
+            method = null;
+            try {
+                method = Editor.class.getMethod("offsetToXY", int.class);
+            } catch (NoSuchMethodException ignored) {
+            }
+            editorOffsetToXY = method;
+        }
+
+        private static BufferedImage createImage(int width, int height, int type) {
+            if (utilCreateImage == null) {
+                //noinspection UndesirableClassUsage
+                return new BufferedImage(width, height, type);
+            }
+            return (BufferedImage) invoke(utilCreateImage, null, width, height, type);
+        }
+
+        private static Point offsetToXY(Editor editor, int offset) {
+            if (editorOffsetToXY == null) {
+                VisualPosition visualPosition = editor.offsetToVisualPosition(offset);
+                return editor.visualPositionToXY(visualPosition);
+            }
+            return (Point) invoke(editorOffsetToXY, editor, offset);
+        }
+
+        private static Object invoke(Method method, Object bind, Object... params) {
+            try {
+                method.setAccessible(true);
+                return method.invoke(bind, params);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
