@@ -98,8 +98,7 @@ class ImageBuilder {
                 new TextRange(selectionStart, selectionEnd));
 
         SoftWrapModelEx wrapModel = editor.getSoftWrapModel();
-        int symbolWidth1 = wrapModel.getMinDrawingWidthInPixels(SoftWrapDrawingType.BEFORE_SOFT_WRAP_LINE_FEED);
-        int symbolWidth2 = wrapModel.getMinDrawingWidthInPixels(SoftWrapDrawingType.AFTER_SOFT_WRAP);
+        int symbolWidth = wrapModel.getMinDrawingWidthInPixels(SoftWrapDrawingType.BEFORE_SOFT_WRAP_LINE_FEED);
         int wsCharWidth = EditorUtil.charWidth(' ', Font.PLAIN, editor);
 
         int leftEdge = 0;
@@ -113,7 +112,7 @@ class ImageBuilder {
                 // add soft warp stops
                 for (SoftWrap softWrap : wrapModel.getSoftWrapsForLine(i)) {
                     Point point = Compatibility.offsetToXY(editor, softWrap.getStart() - 1);
-                    rightEdge = Math.max(rightEdge, point.x + wsCharWidth + symbolWidth1);
+                    rightEdge = Math.max(rightEdge, point.x + wsCharWidth + symbolWidth);
                 }
                 // add line ends
                 LogicalPosition lastColumn = new LogicalPosition(i, Integer.MAX_VALUE);
@@ -155,10 +154,10 @@ class ImageBuilder {
                         continue;
                     }
                     if (wrapModel.getSoftWrap(i) != null) { // wrap sign on visual line start
-                        leftEdge = Math.min(leftEdge, upperLeft.x - symbolWidth2);
+                        leftEdge = Math.min(leftEdge, upperLeft.x);
                     }
                     if (wrapModel.getSoftWrap(i + 1) != null) { // wrap sign on visual line end
-                        rightEdge = Math.max(rightEdge, upperLeft.x + wsCharWidth + symbolWidth1);
+                        rightEdge = Math.max(rightEdge, upperLeft.x + wsCharWidth + symbolWidth);
                     }
                 }
             }
