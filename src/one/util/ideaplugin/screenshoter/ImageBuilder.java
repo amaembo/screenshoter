@@ -1,7 +1,11 @@
 package one.util.ideaplugin.screenshoter;
 
 
-import com.intellij.openapi.editor.*;
+import com.intellij.openapi.editor.CaretModel;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.SelectionModel;
+import com.intellij.openapi.editor.VisualPosition;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
@@ -12,25 +16,12 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
 import static com.intellij.codeInsight.hint.EditorFragmentComponent.getBackgroundColor;
 
 class ImageBuilder {
     private static final Pattern EMPTY_SUFFIX = Pattern.compile("\n\\s+$");
-
-    private static final Method utilCreateImage;
-
-    static {
-        Method method = null;
-        try {
-            method = UIUtil.class.getMethod("createImage", Component.class, int.class, int.class, int.class);
-        } catch (NoSuchMethodException ignored) {
-        }
-        utilCreateImage = method;
-    }
 
     @NotNull
     private final Editor editor;
@@ -122,18 +113,7 @@ class ImageBuilder {
 
     @NotNull
     private static BufferedImage paint(JComponent contentComponent, AffineTransform at, int width, int height) {
-        BufferedImage img = null;
-        if (utilCreateImage != null) {
-            try {
-                img = (BufferedImage) utilCreateImage.invoke(null, contentComponent, width, height, BufferedImage
-                        .TYPE_INT_RGB);
-            } catch (IllegalAccessException | InvocationTargetException ignored) {
-            }
-        }
-        if (img == null) {
-            //noinspection UndesirableClassUsage
-            img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        }
+        BufferedImage img = UIUtil.createImage(contentComponent, width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics = (Graphics2D) img.getGraphics();
         graphics.setTransform(at);
         contentComponent.paint(graphics);
