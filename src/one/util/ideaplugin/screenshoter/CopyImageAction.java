@@ -20,7 +20,7 @@ import static one.util.ideaplugin.screenshoter.CopyImagePlugin.NOTIFICATION_GROU
 public class CopyImageAction extends AnAction {
 
     @Override
-    public void actionPerformed(AnActionEvent event) {
+    public void actionPerformed(@NotNull AnActionEvent event) {
         Editor editor = CopyImagePlugin.getEditor(event);
         if (editor == null) return;
 
@@ -42,7 +42,7 @@ public class CopyImageAction extends AnAction {
     }
 
     static class TransferableImage implements Transferable {
-        Image image;
+        final Image image;
 
         TransferableImage(Image image) {
             this.image = image;
