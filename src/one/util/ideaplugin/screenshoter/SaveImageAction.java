@@ -33,7 +33,7 @@ public class SaveImageAction extends AnAction {
     private static final DateTimeFormatter DATE_TIME_PATTERN = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
     @Override
-    public void actionPerformed(AnActionEvent anActionEvent) {
+    public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
         Editor editor = CopyImagePlugin.getEditor(anActionEvent);
         if (editor == null) return;
 
@@ -60,13 +60,13 @@ public class SaveImageAction extends AnAction {
                 ImageIO.write(image, "png", os);
             }
 
-            String pathRepresentation = StringUtil.escapeXml(StringUtil.shortenPathWithEllipsis(path.toString(), 50));
+            String pathRepresentation = StringUtil.escapeXmlEntities(StringUtil.shortenPathWithEllipsis(path.toString(), 50));
             NotificationListener listener = (notification, hyperlinkEvent) -> {
                 try {
                     Desktop.getDesktop().open(path.toFile());
                 } catch (IOException e) {
-                    showError(project, "Cannot open image:  " + StringUtil.escapeXml(
-                            path.toString()) + ":<br>" + StringUtil.escapeXml(
+                    showError(project, "Cannot open image:  " + StringUtil.escapeXmlEntities(
+                            path.toString()) + ":<br>" + StringUtil.escapeXmlEntities(
                             StringUtil.notNullize(e.getLocalizedMessage())));
                 }
             };
@@ -77,11 +77,11 @@ public class SaveImageAction extends AnAction {
                             NotificationType.INFORMATION, listener)
                     .notify(project);
         } catch (FileAlreadyExistsException e) {
-            showError(project, "Cannot save image:  " + StringUtil.escapeXml(
-                    path.toString()) + ":<br>Not a directory: " + StringUtil.escapeXml(e.getFile()));
+            showError(project, "Cannot save image:  " + StringUtil.escapeXmlEntities(
+                    path.toString()) + ":<br>Not a directory: " + StringUtil.escapeXmlEntities(e.getFile()));
         } catch (IOException e) {
-            showError(project, "Cannot save image:  " + StringUtil.escapeXml(
-                    path.toString()) + ":<br>" + StringUtil.escapeXml(
+            showError(project, "Cannot save image:  " + StringUtil.escapeXmlEntities(
+                    path.toString()) + ":<br>" + StringUtil.escapeXmlEntities(
                     StringUtil.notNullize(e.getLocalizedMessage())));
         }
     }
