@@ -43,7 +43,7 @@ public class CopyImageOptionsProvider implements PersistentStateComponent<CopyIm
         public boolean myRemoveCaret = true;
         public boolean myChopIndentation = true;
         public String myDirectoryToSave = null;
-        public int myPadding = 15;
+        public int myPadding = 0;
 
         @Override
         public boolean equals(Object o) {
