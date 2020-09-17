@@ -1,3 +1,6 @@
+[![IntelliJ IDEA Plugin](https://img.shields.io/jetbrains/plugin/v/9406-code-screenshots?label=plugin&logo=intellij-idea)](https://plugins.jetbrains.com/plugin/9406-code-screenshots/)
+[![IntelliJ IDEA Plugin](https://img.shields.io/jetbrains/plugin/d/9406-code-screenshots?logo=intellij-idea)](https://plugins.jetbrains.com/plugin/9406-code-screenshots/)
+
 IDEA Code Screenshoter
 ===
 
