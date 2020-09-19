@@ -1,3 +1,7 @@
 /out/
 /screenshoter.jar
 /.idea/workspace.xml
+
+# Gradle
+.gradle/
+build/
