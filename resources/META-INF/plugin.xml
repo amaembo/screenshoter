@@ -1,9 +1,9 @@
 <idea-plugin>
   <id>one.util.ideaplugin.screenshoter</id>
   <name>Code screenshots</name>
-  <version>1.4</version>
   <vendor email="tagir.valeev@jetbrains.com" url="https://github.com/amaembo/screenshoter/">Tagir Valeev</vendor>
 
+  <!-- language=HTML -->
   <description><![CDATA[
       <p>Select a code and press a hot-key (Ctrl+Alt+Shift+A by default)
       to copy it as the image (make a screenshot).</p>
@@ -12,6 +12,7 @@
       <p>Some plugin options are available under Editor|Copy image options</p>
     ]]></description>
 
+  <!-- language=HTML -->
   <change-notes><![CDATA[
       <ul>
         <li>Version 1.4: Maintenance release: remove deprecated API usages; fix capitalization issues</li>
@@ -21,8 +22,6 @@
       </ul>
     ]]>
   </change-notes>
-
-  <idea-version since-build="191.0"/>
 
   <depends>com.intellij.modules.lang</depends>
 
