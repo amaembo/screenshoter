@@ -1,6 +1,9 @@
+# IDEA ignore list
+.idea/workspace.xml
+*.iml
+
 /out/
 /screenshoter.jar
-/.idea/workspace.xml
 
 # Gradle
 .gradle/
