@@ -1,10 +1,16 @@
-# IDEA ignore list
-.idea/workspace.xml
-*.iml
-
-/out/
-/screenshoter.jar
-
 # Gradle
 .gradle/
 build/
+
+# IDEA ignore list
+.idea/*
+!.idea/dictionaries/lan.xml
+!.idea/codeStyleSettings.xml
+!.idea/externalDependencies.xml
+!.idea/uiDesigner.xml
+!.idea/vcs.xml
+*.iml
+
+# Other
+/out/
+/screenshoter.jar
