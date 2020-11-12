@@ -20,12 +20,10 @@ import javax.swing.*;
  */
 public class CopyImageConfigurable implements SearchableConfigurable, Configurable.NoScroll {
     private CopyImageOptionsPanel myPanel;
-    private final CopyImageOptionsProvider myManager;
     private final Project myProject;
 
     public CopyImageConfigurable(Project project) {
         this.myProject = project;
-        myManager = project.getService(CopyImageOptionsProvider.class);
     }
 
     @Nls
@@ -56,17 +54,20 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
 
     @Override
     public boolean isModified() {
-        return !myManager.getState().equals(myPanel.toState());
+        CopyImageOptionsProvider provider = myProject.getService(CopyImageOptionsProvider.class);
+        return !provider.getState().equals(myPanel.toState());
     }
 
     @Override
     public void apply() {
-        myManager.loadState(myPanel.toState());
+        CopyImageOptionsProvider provider = myProject.getService(CopyImageOptionsProvider.class);
+        provider.loadState(myPanel.toState());
     }
 
     @Override
     public void reset() {
-        myPanel.fromState(myManager.getState());
+        CopyImageOptionsProvider provider = myProject.getService(CopyImageOptionsProvider.class);
+        myPanel.fromState(provider.getState());
     }
 
     @Override
