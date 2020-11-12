@@ -2,6 +2,8 @@ package one.util.ideaplugin.screenshoter;
 
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.project.DumbAware;
+import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.ui.MessageType;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,7 +19,7 @@ import static one.util.ideaplugin.screenshoter.CopyImagePlugin.NOTIFICATION_GROU
 /**
  * @author Tagir Valeev
  */
-public class CopyImageAction extends AnAction {
+public class CopyImageAction extends DumbAwareAction {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent event) {
