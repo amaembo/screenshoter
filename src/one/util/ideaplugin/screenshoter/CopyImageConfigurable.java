@@ -1,5 +1,6 @@
 package one.util.ideaplugin.screenshoter;
 
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.Configurable;
@@ -54,19 +55,19 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
 
     @Override
     public boolean isModified() {
-        CopyImageOptionsProvider provider = myProject.getService(CopyImageOptionsProvider.class);
+        CopyImageOptionsProvider provider = ServiceManager.getService(myProject, CopyImageOptionsProvider.class);
         return !provider.getState().equals(myPanel.toState());
     }
 
     @Override
     public void apply() {
-        CopyImageOptionsProvider provider = myProject.getService(CopyImageOptionsProvider.class);
+        CopyImageOptionsProvider provider = ServiceManager.getService(myProject, CopyImageOptionsProvider.class);
         provider.loadState(myPanel.toState());
     }
 
     @Override
     public void reset() {
-        CopyImageOptionsProvider provider = myProject.getService(CopyImageOptionsProvider.class);
+        CopyImageOptionsProvider provider = ServiceManager.getService(myProject, CopyImageOptionsProvider.class);
         myPanel.fromState(provider.getState());
     }
 
