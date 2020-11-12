@@ -23,9 +23,9 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
     private final CopyImageOptionsProvider myManager;
     private final Project myProject;
 
-    public CopyImageConfigurable(CopyImageOptionsProvider manager, Project project) {
-        myManager = manager;
+    public CopyImageConfigurable(Project project) {
         this.myProject = project;
+        myManager = project.getService(CopyImageOptionsProvider.class);
     }
 
     @Nls
@@ -119,7 +119,7 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
         private void createUIComponents() {
             FileChooserDescriptor singleFolderDescriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
             TextFieldWithHistoryWithBrowseButton field = SwingHelper.createTextFieldWithHistoryWithBrowseButton(myProject,
-                    "Save to directory",
+                "Save to Directory",
                     singleFolderDescriptor,
                     ContainerUtil::emptyList);
             mySaveDirectoryPanel = field;
