@@ -34,23 +34,21 @@ class ImageBuilder {
 
     @NotNull
     BufferedImage createImage() {
-        SelectionModel selectionModel = editor.getSelectionModel();
-        int start = selectionModel.getSelectionStart();
-        int end = selectionModel.getSelectionEnd();
-
-        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
-        Rectangle2D r = getSelectionRectangle();
+        TextRange range = getRange();
 
         CaretModel caretModel = editor.getCaretModel();
+        SelectionModel selectionModel = editor.getSelectionModel();
 
         selectionModel.setSelection(0, 0);
         int offset = caretModel.getOffset();
+        Document document = editor.getDocument();
+        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
         if (options.myRemoveCaret) {
+            caretModel.moveToOffset(range.getStartOffset() == 0 ?
+                document.getLineEndOffset(document.getLineCount() - 1) : 0);
             if (editor instanceof EditorEx) {
                 ((EditorEx) editor).setCaretEnabled(false);
             }
-            Document document = editor.getDocument();
-            caretModel.moveToOffset(start == 0 ? document.getLineEndOffset(document.getLineCount() - 1) : 0);
         }
 
         try {
@@ -62,6 +60,8 @@ class ImageBuilder {
             newTransform.scale(scale, scale);
             // To flush glyph cache
             paint(contentComponent, newTransform, 1, 1);
+            String text = document.getText(range);
+            Rectangle2D r = getSelectionRectangle(range, text, options);
 
             newTransform.translate(-r.getX(), -r.getY());
             BufferedImage editorImage = paint(contentComponent, newTransform,
@@ -75,7 +75,7 @@ class ImageBuilder {
                 }
                 caretModel.moveToOffset(offset);
             }
-            selectionModel.setSelection(start, end);
+            selectionModel.setSelection(range.getStartOffset(), range.getEndOffset());
         }
     }
 
