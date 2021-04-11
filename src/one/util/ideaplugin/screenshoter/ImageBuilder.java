@@ -8,8 +8,10 @@ import com.intellij.openapi.editor.Inlay;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.editor.VisualPosition;
 import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.util.ui.UIUtil;
+
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -34,24 +36,13 @@ class ImageBuilder {
 
     @NotNull
     BufferedImage createImage() {
-        TextRange range = getRange();
+        TextRange range = getRange(editor);
 
-        CaretModel caretModel = editor.getCaretModel();
-        SelectionModel selectionModel = editor.getSelectionModel();
-
-        selectionModel.setSelection(0, 0);
-        int offset = caretModel.getOffset();
         Document document = editor.getDocument();
-        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
-        if (options.myRemoveCaret) {
-            caretModel.moveToOffset(range.getStartOffset() == 0 ?
-                document.getLineEndOffset(document.getLineCount() - 1) : 0);
-            if (editor instanceof EditorEx) {
-                ((EditorEx) editor).setCaretEnabled(false);
-            }
-        }
-
+        EditorState state = EditorState.from(editor);
         try {
+            resetEditor();
+            CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
             double scale = options.myScale;
             JComponent contentComponent = editor.getContentComponent();
             Graphics2D contentGraphics = (Graphics2D) contentComponent.getGraphics();
@@ -69,13 +60,22 @@ class ImageBuilder {
             return padding(options, editor, editorImage);
         }
         finally {
-            if (options.myRemoveCaret) {
-                if (editor instanceof EditorEx) {
-                    ((EditorEx) editor).setCaretEnabled(true);
-                }
-                caretModel.moveToOffset(offset);
+            state.restore(editor);
+        }
+    }
+
+    private void resetEditor() {
+        Document document = editor.getDocument();
+        TextRange range = getRange(editor);
+        editor.getSelectionModel().setSelection(0, 0);
+        Project project = editor.getProject();
+        if (CopyImageOptionsProvider.getInstance(project).getState().myRemoveCaret) {
+            editor.getCaretModel().moveToOffset(range.getStartOffset() == 0 ?
+                document.getLineEndOffset(document.getLineCount() - 1) : 0);
+            if (editor instanceof EditorEx) {
+                ((EditorEx) editor).setCaretEnabled(false);
             }
-            selectionModel.setSelection(range.getStartOffset(), range.getEndOffset());
+            editor.getSettings().setCaretRowShown(false);
         }
     }
 
@@ -90,13 +90,13 @@ class ImageBuilder {
     @NotNull
     Rectangle2D getSelectionRectangle() {
         CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
-        TextRange range = getRange();
+        TextRange range = getRange(editor);
         Document document = editor.getDocument();
         String text = document.getText(range);
         return getSelectionRectangle(range, text, options);
     }
 
-    TextRange getRange() {
+    private static TextRange getRange(Editor editor) {
         SelectionModel selectionModel = editor.getSelectionModel();
         int start = selectionModel.getSelectionStart();
         int end = selectionModel.getSelectionEnd();
@@ -162,5 +162,38 @@ class ImageBuilder {
         graphics.setTransform(at);
         contentComponent.paint(graphics);
         return img;
+    }
+
+    public static class EditorState {
+        private final TextRange range;
+        private final int offset;
+        private final boolean caretRow;
+
+        public EditorState(TextRange range, int offset, boolean caretRow) {
+            this.range = range;
+            this.offset = offset;
+            this.caretRow = caretRow;
+        }
+
+        @NotNull
+        static EditorState from(Editor editor) {
+            TextRange range = getRange(editor);
+            int offset = editor.getCaretModel().getOffset();
+
+            return new EditorState(range, offset, editor.getSettings().isCaretRowShown());
+        }
+
+        void restore(Editor editor) {
+            editor.getSettings().setCaretRowShown(caretRow);
+            SelectionModel selectionModel = editor.getSelectionModel();
+            CaretModel caretModel = editor.getCaretModel();
+            if (CopyImageOptionsProvider.getInstance(editor.getProject()).getState().myRemoveCaret) {
+                if (editor instanceof EditorEx) {
+                    ((EditorEx) editor).setCaretEnabled(true);
+                }
+                caretModel.moveToOffset(offset);
+            }
+            selectionModel.setSelection(range.getStartOffset(), range.getEndOffset());
+        }
     }
 }
