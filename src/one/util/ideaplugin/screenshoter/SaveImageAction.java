@@ -1,5 +1,6 @@
 package one.util.ideaplugin.screenshoter;
 
+import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationListener;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -24,8 +25,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
-import static one.util.ideaplugin.screenshoter.CopyImagePlugin.NOTIFICATION_GROUP;
 
 
 public class SaveImageAction extends AnAction {
@@ -71,7 +70,7 @@ public class SaveImageAction extends AnAction {
                 }
             };
             String openLink = Desktop.isDesktopSupported() ? "<a href=''>Open</a>" : "";
-            NOTIFICATION_GROUP
+            NotificationGroupManager.getInstance().getNotificationGroup("image.saved.id")
                     .createNotification("Image was saved:",
                             pathRepresentation + "<br>" + openLink,
                             NotificationType.INFORMATION, listener)
@@ -87,7 +86,8 @@ public class SaveImageAction extends AnAction {
     }
 
     private void showError(Project project, String error) {
-        NOTIFICATION_GROUP.createNotification(error, MessageType.ERROR).notify(project);
+        NotificationGroupManager.getInstance().getNotificationGroup("image.saved.id")
+            .createNotification(error, MessageType.ERROR).notify(project);
     }
 
     @Override

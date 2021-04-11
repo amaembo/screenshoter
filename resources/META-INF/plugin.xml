@@ -23,7 +23,7 @@
     ]]>
   </change-notes>
 
-  <idea-version since-build="191.0"/>
+  <idea-version since-build="192.0"/>
 
   <depends>com.intellij.modules.lang</depends>
 
@@ -42,5 +42,6 @@
   <extensions defaultExtensionNs="com.intellij">
     <projectService serviceImplementation="one.util.ideaplugin.screenshoter.CopyImageOptionsProvider"/>
     <projectConfigurable groupId="editor" instance="one.util.ideaplugin.screenshoter.CopyImageConfigurable" id="screenshoter" displayName="Copy Image Options" />
+    <notificationGroup displayType="STICKY_BALLOON" id="image.saved.id" isLogByDefault="false"/>
   </extensions>
 </idea-plugin>

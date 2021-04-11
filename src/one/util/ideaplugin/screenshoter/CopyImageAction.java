@@ -1,10 +1,12 @@
 package one.util.ideaplugin.screenshoter;
 
-import com.intellij.openapi.actionSystem.*;
+import com.intellij.notification.NotificationGroupManager;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.ui.MessageType;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -13,8 +15,6 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.util.Arrays;
-
-import static one.util.ideaplugin.screenshoter.CopyImagePlugin.NOTIFICATION_GROUP;
 
 /**
  * @author Tagir Valeev
@@ -28,15 +28,15 @@ public class CopyImageAction extends DumbAwareAction {
 
         Image image = new ImageBuilder(editor).createImage();
 
-        TransferableImage transferableImage = new TransferableImage(image);
+        Transferable transferableImage = new TransferableImage(image);
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(transferableImage, (clipboard1, contents) -> {
         });
-        NOTIFICATION_GROUP
+        NotificationGroupManager.getInstance().getNotificationGroup("image.saved.id")
                 .createNotification("Image was copied to the clipboard", MessageType.INFO)
                 .notify(editor.getProject());
     }
-    
+
     @Override
     public void update(AnActionEvent event) {
         Presentation presentation = event.getPresentation();
