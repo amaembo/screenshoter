@@ -6,6 +6,7 @@ import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.ui.MessageType;
+import com.intellij.openapi.ui.Messages;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,12 +22,22 @@ import java.util.Arrays;
  */
 public class CopyImageAction extends DumbAwareAction {
 
+    static final long SIZE_LIMIT_TO_WARN = 3_000_000L;
+
     @Override
     public void actionPerformed(@NotNull AnActionEvent event) {
         Editor editor = CopyImagePlugin.getEditor(event);
         if (editor == null) return;
 
-        Image image = new ImageBuilder(editor).createImage();
+        ImageBuilder imageBuilder = new ImageBuilder(editor);
+        if (imageBuilder.getSelectedSize() > SIZE_LIMIT_TO_WARN) {
+            if (Messages.showYesNoDialog(event.getProject(),
+                "Copying such a big image could be slow and may take a lot of memory. Proceed?",
+                "Code Screenshots", "Yes, Copy It!", "Cancel", null) != Messages.YES) {
+                return;
+            }
+        }
+        Image image = imageBuilder.createImage();
 
         Transferable transferableImage = new TransferableImage(image);
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();

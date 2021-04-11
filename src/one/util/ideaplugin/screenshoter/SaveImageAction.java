@@ -9,6 +9,7 @@ import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.SystemProperties;
@@ -32,11 +33,19 @@ public class SaveImageAction extends AnAction {
     private static final DateTimeFormatter DATE_TIME_PATTERN = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
     @Override
-    public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
-        Editor editor = CopyImagePlugin.getEditor(anActionEvent);
+    public void actionPerformed(@NotNull AnActionEvent event) {
+        Editor editor = CopyImagePlugin.getEditor(event);
         if (editor == null) return;
 
-        BufferedImage image = new ImageBuilder(editor).createImage();
+        ImageBuilder imageBuilder = new ImageBuilder(editor);
+        if (imageBuilder.getSelectedSize() > CopyImageAction.SIZE_LIMIT_TO_WARN) {
+            if (Messages.showYesNoDialog(event.getProject(),
+                "Saving such a big image could be slow and may take a lot of memory. Proceed?",
+                "Code Screenshots", "Yes, Save It!", "Cancel", null) != Messages.YES) {
+                return;
+            }
+        }
+        BufferedImage image = imageBuilder.createImage();
         saveImage(editor, image);
     }
 

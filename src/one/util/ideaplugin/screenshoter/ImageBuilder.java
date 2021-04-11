@@ -36,24 +36,23 @@ class ImageBuilder {
         SelectionModel selectionModel = editor.getSelectionModel();
         int start = selectionModel.getSelectionStart();
         int end = selectionModel.getSelectionEnd();
-        TextRange range = new TextRange(start, end);
+
+        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
+        Rectangle2D r = getSelectionRectangle();
 
         CaretModel caretModel = editor.getCaretModel();
-        Document document = editor.getDocument();
 
         selectionModel.setSelection(0, 0);
-        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
         int offset = caretModel.getOffset();
         if (options.myRemoveCaret) {
             if (editor instanceof EditorEx) {
                 ((EditorEx) editor).setCaretEnabled(false);
             }
+            Document document = editor.getDocument();
             caretModel.moveToOffset(start == 0 ? document.getLineEndOffset(document.getLineCount() - 1) : 0);
         }
 
         try {
-            String text = document.getText(range);
-
             double scale = options.myScale;
             JComponent contentComponent = editor.getContentComponent();
             Graphics2D contentGraphics = (Graphics2D) contentComponent.getGraphics();
@@ -62,7 +61,6 @@ class ImageBuilder {
             newTransform.scale(scale, scale);
             // To flush glyph cache
             paint(contentComponent, newTransform, 1, 1);
-            Rectangle2D r = getSelectionRectangle(range, text, options);
 
             newTransform.translate(-r.getX(), -r.getY());
             BufferedImage editorImage = paint(contentComponent, newTransform,
@@ -80,9 +78,32 @@ class ImageBuilder {
         }
     }
 
+    long getSelectedSize() {
+        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
+        Rectangle2D rectangle = getSelectionRectangle();
+        double sizeX = rectangle.getWidth() + options.myPadding * 2;
+        double sizeY = rectangle.getHeight() + options.myPadding * 2;
+        return (long)(sizeX * sizeY * options.myScale * options.myScale);
+    }
+
     @NotNull
-    private Rectangle2D getSelectionRectangle(TextRange range,
-                                              String text, CopyImageOptionsProvider.State options) {
+    Rectangle2D getSelectionRectangle() {
+        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
+        TextRange range = getRange();
+        Document document = editor.getDocument();
+        String text = document.getText(range);
+        return getSelectionRectangle(range, text, options);
+    }
+
+    TextRange getRange() {
+        SelectionModel selectionModel = editor.getSelectionModel();
+        int start = selectionModel.getSelectionStart();
+        int end = selectionModel.getSelectionEnd();
+        return new TextRange(start, end);
+    }
+
+    @NotNull
+    private Rectangle2D getSelectionRectangle(TextRange range, String text, CopyImageOptionsProvider.State options) {
         int start = range.getStartOffset();
         int end = range.getEndOffset();
         Rectangle2D r = new Rectangle2D.Double();
