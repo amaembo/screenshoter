@@ -4,6 +4,7 @@ package one.util.ideaplugin.screenshoter;
 import com.intellij.openapi.editor.CaretModel;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.Inlay;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.editor.VisualPosition;
 import com.intellij.openapi.editor.ex.EditorEx;
@@ -68,13 +69,13 @@ class ImageBuilder {
             return padding(options, editor, editorImage);
         }
         finally {
-            selectionModel.setSelection(start, end);
             if (options.myRemoveCaret) {
                 if (editor instanceof EditorEx) {
                     ((EditorEx) editor).setCaretEnabled(true);
                 }
                 caretModel.moveToOffset(offset);
             }
+            selectionModel.setSelection(start, end);
         }
     }
 
@@ -114,9 +115,12 @@ class ImageBuilder {
                 continue;
             }
             VisualPosition pos = editor.offsetToVisualPosition(i);
-            Point2D point = getPoint(editor, pos);
+            Point2D point = editor.visualPositionToXY(pos);
             includePoint(r, point);
             includePoint(r, new Point2D.Double(point.getX(), point.getY() + editor.getLineHeight()));
+        }
+        for (Inlay<?> inlay : editor.getInlayModel().getInlineElementsInRange(start, end)) {
+            r.add(inlay.getBounds());
         }
         return r;
     }
@@ -158,9 +162,5 @@ class ImageBuilder {
         graphics.setTransform(at);
         contentComponent.paint(graphics);
         return img;
-    }
-
-    private static Point2D getPoint(Editor editor, VisualPosition pos) {
-        return editor.visualPositionToXY(pos);
     }
 }
