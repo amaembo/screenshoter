@@ -6,6 +6,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.editor.VisualPosition;
+import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
@@ -35,34 +36,60 @@ class ImageBuilder {
         SelectionModel selectionModel = editor.getSelectionModel();
         int start = selectionModel.getSelectionStart();
         int end = selectionModel.getSelectionEnd();
-
-        selectionModel.setSelection(0, 0);
+        TextRange range = new TextRange(start, end);
 
         CaretModel caretModel = editor.getCaretModel();
-        
         Document document = editor.getDocument();
-        int offset = caretModel.getOffset();
-        
+
+        selectionModel.setSelection(0, 0);
         CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
+        int offset = caretModel.getOffset();
         if (options.myRemoveCaret) {
+            if (editor instanceof EditorEx) {
+                ((EditorEx) editor).setCaretEnabled(false);
+            }
             caretModel.moveToOffset(start == 0 ? document.getLineEndOffset(document.getLineCount() - 1) : 0);
         }
 
-        String text = document.getText(new TextRange(start, end));
+        try {
+            String text = document.getText(range);
 
-        double scale = options.myScale;
-        JComponent contentComponent = editor.getContentComponent();
-        Graphics2D contentGraphics = (Graphics2D) contentComponent.getGraphics();
-        AffineTransform currentTransform = contentGraphics.getTransform();
-        AffineTransform newTransform = new AffineTransform(currentTransform);
-        newTransform.scale(scale, scale);
-        // To flush glyph cache
-        paint(contentComponent, newTransform, 1, 1);
+            double scale = options.myScale;
+            JComponent contentComponent = editor.getContentComponent();
+            Graphics2D contentGraphics = (Graphics2D) contentComponent.getGraphics();
+            AffineTransform currentTransform = contentGraphics.getTransform();
+            AffineTransform newTransform = new AffineTransform(currentTransform);
+            newTransform.scale(scale, scale);
+            // To flush glyph cache
+            paint(contentComponent, newTransform, 1, 1);
+            Rectangle2D r = getSelectionRectangle(range, text, options);
+
+            newTransform.translate(-r.getX(), -r.getY());
+            BufferedImage editorImage = paint(contentComponent, newTransform,
+                (int) (r.getWidth() * scale), (int) (r.getHeight() * scale));
+            return padding(options, editor, editorImage);
+        }
+        finally {
+            selectionModel.setSelection(start, end);
+            if (options.myRemoveCaret) {
+                if (editor instanceof EditorEx) {
+                    ((EditorEx) editor).setCaretEnabled(true);
+                }
+                caretModel.moveToOffset(offset);
+            }
+        }
+    }
+
+    @NotNull
+    private Rectangle2D getSelectionRectangle(TextRange range,
+                                              String text, CopyImageOptionsProvider.State options) {
+        int start = range.getStartOffset();
+        int end = range.getEndOffset();
         Rectangle2D r = new Rectangle2D.Double();
 
         for (int i = start; i <= end; i++) {
             if (options.myChopIndentation &&
-                    EMPTY_SUFFIX.matcher(text.substring(0, Math.min(i - start + 1, text.length()))).find()) {
+                EMPTY_SUFFIX.matcher(text.substring(0, Math.min(i - start + 1, text.length()))).find()) {
                 continue;
             }
             VisualPosition pos = editor.offsetToVisualPosition(i);
@@ -70,15 +97,7 @@ class ImageBuilder {
             includePoint(r, point);
             includePoint(r, new Point2D.Double(point.getX(), point.getY() + editor.getLineHeight()));
         }
-
-        newTransform.translate(-r.getX(), -r.getY());
-        BufferedImage editorImage = paint(contentComponent, newTransform,
-                (int) (r.getWidth() * scale), (int) (r.getHeight() * scale));
-        BufferedImage image = padding(options, editor, editorImage);
-
-        selectionModel.setSelection(start, end);
-        caretModel.moveToOffset(offset);
-        return image;
+        return r;
     }
 
 
@@ -92,7 +111,7 @@ class ImageBuilder {
         int sizeY = image.getHeight() + padding * 2;
         //noinspection UndesirableClassUsage / already scaled
         BufferedImage newImage = new BufferedImage(sizeX, sizeY, BufferedImage.TYPE_INT_RGB);
-        
+
         Color backgroundColor = getBackgroundColor(editor, false);
         Graphics g = newImage.getGraphics();
         g.setColor(backgroundColor);
