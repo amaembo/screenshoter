@@ -42,7 +42,7 @@
   </actions>
   <extensions defaultExtensionNs="com.intellij">
     <projectService serviceImplementation="one.util.ideaplugin.screenshoter.CopyImageOptionsProvider"/>
-    <projectConfigurable groupId="editor" instance="one.util.ideaplugin.screenshoter.CopyImageConfigurable" id="screenshoter" displayName="Copy Image Options" />
+    <projectConfigurable groupId="editor" instance="one.util.ideaplugin.screenshoter.CopyImageConfigurable" id="screenshoter" displayName="Code Screenshots" />
     <notificationGroup displayType="STICKY_BALLOON" id="image.saved.id" isLogByDefault="false"/>
   </extensions>
 </idea-plugin>
