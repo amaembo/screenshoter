@@ -1,10 +1,12 @@
 package one.util.ideaplugin.screenshoter;
 
 import com.intellij.notification.NotificationGroupManager;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.DumbAwareAction;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.ui.Messages;
 
@@ -26,8 +28,17 @@ public class CopyImageAction extends DumbAwareAction {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent event) {
+        Project project = event.getProject();
+        if (project == null) return;
         Editor editor = CopyImagePlugin.getEditor(event);
-        if (editor == null) return;
+        if (editor == null) {
+            CopyImagePlugin.showError(project, "'Copy as Image' is available in text editors only");
+            return;
+        }
+        if (!editor.getSelectionModel().hasSelection()) {
+            CopyImagePlugin.showError(project, "Please select the text fragment to copy");
+            return;
+        }
 
         ImageBuilder imageBuilder = new ImageBuilder(editor);
         if (imageBuilder.getSelectedSize() > SIZE_LIMIT_TO_WARN) {
@@ -43,8 +54,9 @@ public class CopyImageAction extends DumbAwareAction {
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(transferableImage, (clipboard1, contents) -> {
         });
-        NotificationGroupManager.getInstance().getNotificationGroup("image.saved.id")
-                .createNotification("Image was copied to the clipboard", MessageType.INFO)
+        NotificationGroupManager.getInstance().getNotificationGroup("Code Screenshots")
+                .createNotification("Code screenshots", null,
+                    "Image was copied to the clipboard",  NotificationType.INFORMATION)
                 .notify(editor.getProject());
     }
 

@@ -19,7 +19,7 @@ public class CopyImageOptionsProvider implements PersistentStateComponent<CopyIm
     private final State myState = new State();
 
     static CopyImageOptionsProvider getInstance(Project project) {
-        return ServiceManager.getService(project, CopyImageOptionsProvider.class);
+        return project.getService(CopyImageOptionsProvider.class);
     }
 
     @NotNull
