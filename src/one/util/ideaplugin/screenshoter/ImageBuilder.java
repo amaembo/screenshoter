@@ -20,6 +20,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static com.intellij.codeInsight.hint.EditorFragmentComponent.getBackgroundColor;
@@ -29,9 +30,12 @@ class ImageBuilder {
 
     @NotNull
     private final Editor editor;
+    @NotNull
+    private final Project project;
 
     ImageBuilder(@NotNull Editor editor) {
         this.editor = editor;
+        this.project = Objects.requireNonNull(editor.getProject());
     }
 
     @NotNull
@@ -42,7 +46,7 @@ class ImageBuilder {
         EditorState state = EditorState.from(editor);
         try {
             resetEditor();
-            CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
+            CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(project).getState();
             double scale = options.myScale;
             JComponent contentComponent = editor.getContentComponent();
             Graphics2D contentGraphics = (Graphics2D) contentComponent.getGraphics();
@@ -68,7 +72,6 @@ class ImageBuilder {
         Document document = editor.getDocument();
         TextRange range = getRange(editor);
         editor.getSelectionModel().setSelection(0, 0);
-        Project project = editor.getProject();
         if (CopyImageOptionsProvider.getInstance(project).getState().myRemoveCaret) {
             editor.getCaretModel().moveToOffset(range.getStartOffset() == 0 ?
                 document.getLineEndOffset(document.getLineCount() - 1) : 0);
@@ -80,7 +83,7 @@ class ImageBuilder {
     }
 
     long getSelectedSize() {
-        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
+        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(project).getState();
         Rectangle2D rectangle = getSelectionRectangle();
         double sizeX = rectangle.getWidth() + options.myPadding * 2;
         double sizeY = rectangle.getHeight() + options.myPadding * 2;
@@ -88,8 +91,8 @@ class ImageBuilder {
     }
 
     @NotNull
-    Rectangle2D getSelectionRectangle() {
-        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(editor.getProject()).getState();
+    private Rectangle2D getSelectionRectangle() {
+        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(project).getState();
         TextRange range = getRange(editor);
         Document document = editor.getDocument();
         String text = document.getText(range);
@@ -120,7 +123,10 @@ class ImageBuilder {
             includePoint(r, new Point2D.Double(point.getX(), point.getY() + editor.getLineHeight()));
         }
         for (Inlay<?> inlay : editor.getInlayModel().getInlineElementsInRange(start, end)) {
-            r.add(inlay.getBounds());
+            Rectangle bounds = inlay.getBounds();
+            if (bounds != null) {
+                r.add(bounds);
+            }
         }
         return r;
     }
@@ -169,7 +175,7 @@ class ImageBuilder {
         private final int offset;
         private final boolean caretRow;
 
-        public EditorState(TextRange range, int offset, boolean caretRow) {
+        EditorState(TextRange range, int offset, boolean caretRow) {
             this.range = range;
             this.offset = offset;
             this.caretRow = caretRow;
@@ -187,7 +193,9 @@ class ImageBuilder {
             editor.getSettings().setCaretRowShown(caretRow);
             SelectionModel selectionModel = editor.getSelectionModel();
             CaretModel caretModel = editor.getCaretModel();
-            if (CopyImageOptionsProvider.getInstance(editor.getProject()).getState().myRemoveCaret) {
+            CopyImageOptionsProvider provider =
+              CopyImageOptionsProvider.getInstance(Objects.requireNonNull(editor.getProject()));
+            if (provider.getState().myRemoveCaret) {
                 if (editor instanceof EditorEx) {
                     ((EditorEx) editor).setCaretEnabled(true);
                 }
