@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.util.Arrays;
 
 /**
  * @author Tagir Valeev
@@ -87,6 +88,7 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
         private JPanel mySaveDirectoryPanel;
         private JTextField myPadding;
         private TextFieldWithHistoryWithBrowseButton mySaveDirectory;
+        private JComboBox<TransferableImage.Format> myFormat;
 
         CopyImageOptionsProvider.State toState() {
             CopyImageOptionsProvider.State state = new CopyImageOptionsProvider.State();
@@ -103,6 +105,8 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
             } catch (NumberFormatException ignored) {
             }
 
+            state.myFormat = TransferableImage.Format.values()[myFormat.getSelectedIndex()];
+
             return state;
         }
 
@@ -112,10 +116,12 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
             mySlider.setValue((int) (state.myScale * SLIDER_SCALE));
             mySaveDirectory.setText(StringUtil.notNullize(state.myDirectoryToSave));
             myPadding.setText(String.valueOf(state.myPadding));
+            myFormat.setSelectedIndex(state.myFormat == null ? 0 : state.myFormat.ordinal());
         }
 
         void init() {
             mySlider.addChangeListener(e -> myScale.setText(String.valueOf(mySlider.getValue() / SLIDER_SCALE)));
+            Arrays.asList(TransferableImage.Format.values()).forEach(myFormat::addItem);
         }
 
         private void createUIComponents() {

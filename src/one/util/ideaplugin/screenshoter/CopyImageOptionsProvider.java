@@ -35,6 +35,7 @@ public class CopyImageOptionsProvider implements PersistentStateComponent<CopyIm
         myState.myChopIndentation = state.myChopIndentation;
         myState.myDirectoryToSave = state.myDirectoryToSave;
         myState.myPadding = state.myPadding;
+        myState.myFormat = state.myFormat;
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -44,6 +45,7 @@ public class CopyImageOptionsProvider implements PersistentStateComponent<CopyIm
         public boolean myChopIndentation = true;
         public String myDirectoryToSave = null;
         public int myPadding = 0;
+        public TransferableImage.Format myFormat = TransferableImage.Format.PNG;
 
         @Override
         public boolean equals(Object o) {
@@ -54,12 +56,13 @@ public class CopyImageOptionsProvider implements PersistentStateComponent<CopyIm
                     myRemoveCaret == state.myRemoveCaret &&
                     myChopIndentation == state.myChopIndentation &&
                     myPadding == state.myPadding &&
+                    myFormat == state.myFormat &&
                     Objects.equals(myDirectoryToSave, state.myDirectoryToSave);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(myScale, myRemoveCaret, myChopIndentation, myDirectoryToSave, myPadding);
+            return Objects.hash(myScale, myRemoveCaret, myChopIndentation, myDirectoryToSave, myPadding, myFormat);
         }
     }
 }
