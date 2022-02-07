@@ -7,17 +7,11 @@ import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.ui.Messages;
-
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.util.Arrays;
 
 /**
  * @author Tagir Valeev
@@ -48,16 +42,17 @@ public class CopyImageAction extends DumbAwareAction {
                 return;
             }
         }
-        Image image = imageBuilder.createImage();
+        TransferableImage<?> image = imageBuilder.createImage();
 
-        Transferable transferableImage = new TransferableImage(image);
-        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        clipboard.setContents(transferableImage, (clipboard1, contents) -> {
-        });
-        NotificationGroupManager.getInstance().getNotificationGroup("Code Screenshots")
+        if (image != null) {
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(image, (clipboard1, contents) -> {
+            });
+            NotificationGroupManager.getInstance().getNotificationGroup("Code Screenshots")
                 .createNotification("Code screenshots", null,
-                    "Image was copied to the clipboard",  NotificationType.INFORMATION)
+                    "Image was copied to the clipboard", NotificationType.INFORMATION)
                 .notify(editor.getProject());
+        }
     }
 
     @Override
@@ -66,27 +61,4 @@ public class CopyImageAction extends DumbAwareAction {
         presentation.setEnabled(CopyImagePlugin.getEditor(event) != null);
     }
 
-    static class TransferableImage implements Transferable {
-        final Image image;
-
-        TransferableImage(Image image) {
-            this.image = image;
-        }
-
-        @NotNull
-        public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
-            if (flavor.equals(DataFlavor.imageFlavor) && image != null) {
-                return image;
-            }
-            throw new UnsupportedFlavorException(flavor);
-        }
-
-        public DataFlavor[] getTransferDataFlavors() {
-            return new DataFlavor[]{DataFlavor.imageFlavor};
-        }
-
-        public boolean isDataFlavorSupported(DataFlavor flavor) {
-            return Arrays.stream(getTransferDataFlavors()).anyMatch(flavor::equals);
-        }
-    }
 }

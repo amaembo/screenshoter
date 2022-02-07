@@ -14,10 +14,7 @@ import com.intellij.util.SystemProperties;
 
 import org.jetbrains.annotations.NotNull;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.FileAlreadyExistsException;
@@ -54,11 +51,13 @@ public class SaveImageAction extends AnAction {
                 return;
             }
         }
-        BufferedImage image = imageBuilder.createImage();
-        saveImage(image, project);
+        TransferableImage<?> image = imageBuilder.createImage();
+        if (image != null) {
+            saveImage(image, project);
+        }
     }
 
-    private void saveImage(@NotNull RenderedImage image, @NotNull Project project) {
+    private void saveImage(@NotNull TransferableImage<?> image, @NotNull Project project) {
         CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(project).getState();
         String toSave = options.myDirectoryToSave;
         if (StringUtil.isEmpty(toSave)) {
@@ -67,13 +66,13 @@ public class SaveImageAction extends AnAction {
         toSave = toSave.trim();
         LocalDateTime now = LocalDateTime.now();
         String date = DATE_TIME_PATTERN.format(now);
-        String fileName = "Shot_" + date + ".png";
+        String fileName = "Shot_" + date + "." + image.format.ext;
         Path path = Paths.get(FileUtil.toSystemDependentName(toSave), fileName);
         try {
             Files.createDirectories(path.getParent());
 
             try (OutputStream os = Files.newOutputStream(path)) {
-                ImageIO.write(image, "png", os);
+                image.write(os);
             }
 
             String pathRepresentation = StringUtil.escapeXmlEntities(StringUtil.shortenPathWithEllipsis(path.toString(), 50));
