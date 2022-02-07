@@ -1,6 +1,7 @@
 package one.util.ideaplugin.screenshoter;
 
-import com.intellij.notification.NotificationListener;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationAction;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -11,7 +12,6 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.SystemProperties;
-
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -76,20 +76,25 @@ public class SaveImageAction extends AnAction {
             }
 
             String pathRepresentation = StringUtil.escapeXmlEntities(StringUtil.shortenPathWithEllipsis(path.toString(), 50));
-            NotificationListener listener = (notification, hyperlinkEvent) -> {
-                try {
-                    Desktop.getDesktop().open(path.toFile());
-                } catch (IOException e) {
-                    CopyImagePlugin.showError(project, "Cannot open image:  " + StringUtil.escapeXmlEntities(
-                            path.toString()) + ":<br>" + StringUtil.escapeXmlEntities(
-                            StringUtil.notNullize(e.getLocalizedMessage())));
-                }
-            };
-            String openLink = Desktop.isDesktopSupported() ? "<a href=''>Open</a>" : "";
-            CopyImagePlugin.getNotificationGroup()
-                    .createNotification("Code screenshots", "Image was saved:", pathRepresentation + "<br>" + openLink,
-                            NotificationType.INFORMATION, listener)
-                    .notify(project);
+            Notification notification = CopyImagePlugin.getNotificationGroup()
+                    .createNotification(pathRepresentation, NotificationType.INFORMATION)
+                    .setTitle("Code screenshots")
+                    .setSubtitle("Image was saved:");
+            if (Desktop.isDesktopSupported()) {
+                notification.addAction(new NotificationAction("Open") {
+                    @Override
+                    public void actionPerformed(@NotNull AnActionEvent anActionEvent, @NotNull Notification notification) {
+                        try {
+                            Desktop.getDesktop().open(path.toFile());
+                        } catch (IOException e) {
+                            CopyImagePlugin.showError(project, "Cannot open image:  " + StringUtil.escapeXmlEntities(
+                                    path.toString()) + ":<br>" + StringUtil.escapeXmlEntities(
+                                    StringUtil.notNullize(e.getLocalizedMessage())));
+                        }
+                    }
+                });
+            }
+            notification.notify(project);
         } catch (FileAlreadyExistsException e) {
             CopyImagePlugin.showError(project, "Cannot save image:  " + StringUtil.escapeXmlEntities(
                     path.toString()) + ":<br>Not a directory: " + StringUtil.escapeXmlEntities(e.getFile()));

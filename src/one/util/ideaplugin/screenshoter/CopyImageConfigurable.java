@@ -56,19 +56,19 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
 
     @Override
     public boolean isModified() {
-        CopyImageOptionsProvider provider = ServiceManager.getService(myProject, CopyImageOptionsProvider.class);
+        CopyImageOptionsProvider provider = myProject.getService(CopyImageOptionsProvider.class);
         return !provider.getState().equals(myPanel.toState());
     }
 
     @Override
     public void apply() {
-        CopyImageOptionsProvider provider = ServiceManager.getService(myProject, CopyImageOptionsProvider.class);
+        CopyImageOptionsProvider provider = myProject.getService(CopyImageOptionsProvider.class);
         provider.loadState(myPanel.toState());
     }
 
     @Override
     public void reset() {
-        CopyImageOptionsProvider provider = ServiceManager.getService(myProject, CopyImageOptionsProvider.class);
+        CopyImageOptionsProvider provider = myProject.getService(CopyImageOptionsProvider.class);
         myPanel.fromState(provider.getState());
     }
 

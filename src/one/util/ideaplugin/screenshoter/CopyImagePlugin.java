@@ -26,6 +26,6 @@ class CopyImagePlugin {
 
     static void showError(@Nullable Project project, @NotNull String error) {
         getNotificationGroup()
-            .createNotification("Code screenshots", null, error, NotificationType.ERROR).notify(project);
+            .createNotification(error, NotificationType.ERROR).setTitle("Code screenshots").notify(project);
     }
 }

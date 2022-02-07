@@ -49,8 +49,8 @@ public class CopyImageAction extends DumbAwareAction {
             clipboard.setContents(image, (clipboard1, contents) -> {
             });
             NotificationGroupManager.getInstance().getNotificationGroup("Code Screenshots")
-                .createNotification("Code screenshots", null,
-                    "Image was copied to the clipboard", NotificationType.INFORMATION)
+                .createNotification("Image was copied to the clipboard", NotificationType.INFORMATION)
+                .setTitle("Code screenshots")
                 .notify(editor.getProject());
         }
     }
