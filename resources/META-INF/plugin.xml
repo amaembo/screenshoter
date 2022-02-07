@@ -1,20 +1,21 @@
 <idea-plugin>
   <id>one.util.ideaplugin.screenshoter</id>
   <name>Code Screenshots</name>
-  <version>1.7.1</version>
+  <version>1.8</version>
   <vendor email="tagir.valeev@jetbrains.com" url="https://github.com/amaembo/screenshoter/">Tagir Valeev</vendor>
 
   <description><![CDATA[
       <p>Select a code and press a hot-key (Ctrl+Alt+Shift+A by default)
       to copy it as the image (make a screenshot).</p>
       <p>Default hot-key can be changed in Settings|Keymap (search for "Copy as image" action)</p>
-      <p>Additional "Save as image" action is available which allows to save PNG file</p>
-      <p>Some plugin options are available under Editor|Copy image options</p>
+      <p>Additional "Save as image" action is available which allows saving PNG or SVG files</p>
+      <p>Some plugin options are available under Editor | Code Screenshots options</p>
     ]]></description>
 
   <change-notes><![CDATA[
       <ul>
-        <li>Version 1.7.1: Fix handling of folded inlay hints
+        <li>Version 1.8: Save to SVG added; minimal version is 2021.1 now</li>
+        <li>Version 1.7.1: Fix handling of folded inlay hints</li>
         <li>Version 1.7: Rename options panel; notify when there's no selection; cosmetics</li>
         <li>Version 1.6: Avoid deprecated API; warn if copying too large image; include inlays; minimal version is 2020.3 now</li>
         <li>Version 1.5: Dumb mode support; IDEA 2021.1 compatibility</li>
