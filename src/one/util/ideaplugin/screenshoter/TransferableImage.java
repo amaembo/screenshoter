@@ -1,6 +1,6 @@
 package one.util.ideaplugin.screenshoter;
 
-import com.intellij.util.ui.UIUtil;
+import com.intellij.ui.scale.JBUIScale;
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +15,11 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.CharArrayWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
@@ -24,9 +28,11 @@ public abstract class TransferableImage<T> implements Transferable {
     public enum Format {
         PNG("png", DataFlavor.imageFlavor) {
             TransferableImage<?> paint(JComponent contentComponent, AffineTransform at,
-                                        int width, int height, Color backgroundColor, int padding) {
-                BufferedImage img = UIUtil.createImage(
-                    contentComponent, width + 2 * padding, height + 2 * padding, BufferedImage.TYPE_INT_RGB);
+                                       int width, int height, Color backgroundColor, int padding) {
+                double scale = JBUIScale.sysScale(contentComponent);
+                //noinspection UndesirableClassUsage
+                BufferedImage img = new BufferedImage((int) (width * scale + 2 * padding),
+                        (int) (height * scale + 2 * padding), BufferedImage.TYPE_INT_RGB);
                 Graphics2D g = (Graphics2D) img.getGraphics();
                 paint(g, contentComponent, at, width, height, backgroundColor, padding);
                 return new Png(img);
@@ -38,14 +44,15 @@ public abstract class TransferableImage<T> implements Transferable {
                 DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
                 Document doc = domImpl.createDocument("http://www.w3.org/2000/svg", "svg", null);
                 SVGGraphics2D g = new SVGGraphics2D(doc);
-                g.setSVGCanvasSize(new Dimension(width + 2 * padding, height + 2 * padding));
+                double scale = JBUIScale.sysScale(contentComponent);
+                var size = new Dimension((int) (width * scale + 2 * padding), (int) (height * scale + 2 * padding));
+                g.setSVGCanvasSize(size);
                 paint(g, contentComponent, at, width, height, backgroundColor, padding);
                 CharArrayWriter writer = new CharArrayWriter();
                 g.stream(writer, true);
                 return new Svg(writer.toString());
             }
-        },
-        ;
+        };
 
         @NotNull
         private static DataFlavor svgDataFlavor() {
@@ -55,18 +62,22 @@ public abstract class TransferableImage<T> implements Transferable {
         static void paint(Graphics2D g,
                           JComponent contentComponent, AffineTransform at,
                           int width, int height, Color backgroundColor, int padding) {
-            int imgWidth = width + 2 * padding;
-            int imgHeight = height + 2 * padding;
+            double scale = JBUIScale.sysScale(contentComponent);
+            int scaledWidth = (int) (width * scale);
+            int scaledHeight = (int) (height * scale);
+            int imgWidth = scaledWidth + 2 * padding;
+            int imgHeight = scaledHeight + 2 * padding;
             g.setColor(backgroundColor);
             g.fillRect(0, 0, imgWidth, imgHeight);
             g.translate(padding, padding);
-            g.clipRect(0, 0, width, height);
+            g.clipRect(0, 0, scaledWidth, scaledHeight);
             g.transform(at);
             contentComponent.paint(g);
         }
 
         final String ext;
         final DataFlavor[] flavors;
+
         Format(String ext, DataFlavor... flavors) {
             this.ext = ext;
             this.flavors = flavors;
@@ -76,8 +87,10 @@ public abstract class TransferableImage<T> implements Transferable {
                                             int width, int height, Color backgroundColor, int padding) throws IOException;
     }
 
-    @NotNull final Format format;
-    @NotNull final T transferee;
+    @NotNull
+    final Format format;
+    @NotNull
+    final T transferee;
 
     TransferableImage(@NotNull Format format, @NotNull T transferee) {
         this.format = format;
