@@ -1,7 +1,6 @@
 package one.util.ideaplugin.screenshoter;
 
 
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.CaretModel;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -11,16 +10,14 @@ import com.intellij.openapi.editor.VisualPosition;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.ui.JBColor;
+import com.intellij.ui.scale.JBUIScale;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.io.IOException;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -39,8 +36,8 @@ class ImageBuilder {
         this.project = Objects.requireNonNull(editor.getProject());
     }
 
-    @Nullable
-    TransferableImage<?> createImage() {
+    @NotNull
+    GraphicsBuffer createImage() {
         TextRange range = getRange(editor);
 
         Document document = editor.getDocument();
@@ -54,24 +51,46 @@ class ImageBuilder {
             AffineTransform currentTransform = contentGraphics.getTransform();
             AffineTransform newTransform = new AffineTransform(currentTransform);
             newTransform.scale(scale, scale);
-            TransferableImage.Format format = options.myFormat;
-            if (format == null) format = TransferableImage.Format.PNG;
-            // To flush glyph cache
-            format.paint(contentComponent, newTransform, 1, 1, JBColor.BLACK, 0);
             String text = document.getText(range);
             Rectangle2D r = getSelectionRectangle(range, text, options);
 
             newTransform.translate(-r.getX(), -r.getY());
 
-            return format.paint(contentComponent, newTransform,
-                (int) (r.getWidth() * scale), (int) (r.getHeight() * scale),
-                getBackgroundColor(editor, false), options.myPadding);
-        } catch (IOException e) {
-            Logger.getInstance(ImageBuilder.class).error(e);
-            return null;
+            double sysScale = JBUIScale.sysScale(contentComponent);
+            int scaledWidth = (int) (r.getWidth() * scale * sysScale);
+            int scaledHeight = (int) (r.getHeight() * scale * sysScale);
+
+            GraphicsBuffer g = new GraphicsBuffer(
+                GraphicsBuffer.BLACK_HOLE_LIST,
+                scaledWidth + 2 * options.myPadding,
+                scaledHeight + 2 * options.myPadding);
+
+            Color background = getBackgroundColor(editor, false);
+
+            // To flush glyph cache
+            paint(g, contentComponent, newTransform, 1, 1, background, 0);
+
+            g.clear();
+
+            paint(g, contentComponent, newTransform, scaledWidth, scaledHeight, background, options.myPadding);
+
+            return g;
         } finally {
             state.restore(editor);
         }
+    }
+
+    private static void paint(
+        GraphicsBuffer g, JComponent contentComponent, AffineTransform at,
+        int scaledWidth, int scaledHeight, Color backgroundColor, int padding) {
+        int imgWidth = scaledWidth + 2 * padding;
+        int imgHeight = scaledHeight + 2 * padding;
+        g.setColor(backgroundColor);
+        g.fillRect(0, 0, imgWidth, imgHeight);
+        g.translate(padding, padding);
+        g.clipRect(0, 0, scaledWidth, scaledHeight);
+        g.transform(at);
+        contentComponent.paint(g);
     }
 
     private void resetEditor() {

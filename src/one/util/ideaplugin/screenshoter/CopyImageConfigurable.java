@@ -1,6 +1,5 @@
 package one.util.ideaplugin.screenshoter;
 
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.Configurable;
@@ -88,7 +87,7 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
         private JPanel mySaveDirectoryPanel;
         private JTextField myPadding;
         private TextFieldWithHistoryWithBrowseButton mySaveDirectory;
-        private JComboBox<TransferableImage.Format> myFormat;
+        private JComboBox<Format> myFormat;
 
         CopyImageOptionsProvider.State toState() {
             CopyImageOptionsProvider.State state = new CopyImageOptionsProvider.State();
@@ -105,7 +104,7 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
             } catch (NumberFormatException ignored) {
             }
 
-            state.myFormat = TransferableImage.Format.values()[myFormat.getSelectedIndex()];
+            state.myFormat = Format.values()[myFormat.getSelectedIndex()];
 
             return state;
         }
@@ -121,7 +120,7 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
 
         void init() {
             mySlider.addChangeListener(e -> myScale.setText(String.valueOf(mySlider.getValue() / SLIDER_SCALE)));
-            Arrays.asList(TransferableImage.Format.values()).forEach(myFormat::addItem);
+            Arrays.asList(Format.values()).forEach(myFormat::addItem);
         }
 
         private void createUIComponents() {

@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 
 public class SaveImageAction extends AnAction {
@@ -51,13 +52,12 @@ public class SaveImageAction extends AnAction {
                 return;
             }
         }
-        TransferableImage<?> image = imageBuilder.createImage();
-        if (image != null) {
-            saveImage(image, project);
-        }
+        GraphicsBuffer image = imageBuilder.createImage();
+        CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(project).getState();
+        saveImage(image, project, options.myFormat == null ? Format.PNG : options.myFormat);
     }
 
-    private void saveImage(@NotNull TransferableImage<?> image, @NotNull Project project) {
+    private void saveImage(@NotNull GraphicsBuffer image, @NotNull Project project, @NotNull Format format) {
         CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(project).getState();
         String toSave = options.myDirectoryToSave;
         if (StringUtil.isEmpty(toSave)) {
@@ -66,13 +66,13 @@ public class SaveImageAction extends AnAction {
         toSave = toSave.trim();
         LocalDateTime now = LocalDateTime.now();
         String date = DATE_TIME_PATTERN.format(now);
-        String fileName = "Shot_" + date + "." + image.format.ext;
+        String fileName = "Shot_" + date + "." + format.name().toLowerCase(Locale.ROOT);
         Path path = Paths.get(FileUtil.toSystemDependentName(toSave), fileName);
         try {
             Files.createDirectories(path.getParent());
 
             try (OutputStream os = Files.newOutputStream(path)) {
-                image.write(os);
+                format.write(image, os);
             }
 
             String pathRepresentation = StringUtil.escapeXmlEntities(StringUtil.shortenPathWithEllipsis(path.toString(), 50));
