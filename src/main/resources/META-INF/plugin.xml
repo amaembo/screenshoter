@@ -26,8 +26,6 @@
     ]]>
   </change-notes>
 
-  <idea-version since-build="211.0"/>
-
   <depends>com.intellij.modules.lang</depends>
 
   <actions>
