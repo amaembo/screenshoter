@@ -57,7 +57,7 @@ class ImageBuilder {
             TransferableImage.Format format = options.myFormat;
             if (format == null) format = TransferableImage.Format.PNG;
             // To flush glyph cache
-            format.paint(contentComponent, newTransform, 1, 1, JBColor.BLACK, 0);
+            format.paint(contentComponent, newTransform, 1, 1, JBColor.BLACK, Padding.EMPTY);
             String text = document.getText(range);
             Rectangle2D r = getSelectionRectangle(range, text, options);
 
@@ -91,8 +91,8 @@ class ImageBuilder {
     long getSelectedSize() {
         CopyImageOptionsProvider.State options = CopyImageOptionsProvider.getInstance(project).getState();
         Rectangle2D rectangle = getSelectionRectangle();
-        double sizeX = rectangle.getWidth() + options.myPadding * 2;
-        double sizeY = rectangle.getHeight() + options.myPadding * 2;
+        double sizeX = rectangle.getWidth() + options.myPadding.getWidth() * 2;
+        double sizeY = rectangle.getHeight() + options.myPadding.getHeight() * 2;
         return (long)(sizeX * sizeY * options.myScale * options.myScale);
     }
 
