@@ -13,6 +13,7 @@
 
   <change-notes><![CDATA[
       <ul>
+        <li>Version 1.8.1: Remove until-version limitation</li>
         <li>Version 1.8: Save to SVG added (experimentally); minimal version is 2021.3 now</li>
         <li>Version 1.7.1: Fix handling of folded inlay hints</li>
         <li>Version 1.7: Rename options panel; notify when there's no selection; cosmetics</li>

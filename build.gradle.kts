@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "one.util.ideaplugin"
-version = "1.8"
+version = "1.8.1"
 
 repositories {
     mavenCentral()
@@ -28,7 +28,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("213")
-        untilBuild.set("223.*")
+        untilBuild.set("")
     }
 
     signPlugin {
