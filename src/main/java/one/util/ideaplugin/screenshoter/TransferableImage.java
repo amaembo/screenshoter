@@ -28,11 +28,11 @@ public abstract class TransferableImage<T> implements Transferable {
     public enum Format {
         PNG("png", DataFlavor.imageFlavor) {
             TransferableImage<?> paint(JComponent contentComponent, AffineTransform at,
-                                       int width, int height, Color backgroundColor, int padding) {
+                                       int width, int height, Color backgroundColor, Padding padding) {
                 double scale = JBUIScale.sysScale(contentComponent);
                 //noinspection UndesirableClassUsage
-                BufferedImage img = new BufferedImage((int) (width * scale + 2 * padding),
-                        (int) (height * scale + 2 * padding), BufferedImage.TYPE_INT_RGB);
+                BufferedImage img = new BufferedImage((int) (width * scale + 2 * padding.getWidth()),
+                        (int) (height * scale + 2 * padding.getHeight()), BufferedImage.TYPE_INT_RGB);
                 Graphics2D g = (Graphics2D) img.getGraphics();
                 paint(g, contentComponent, at, width, height, backgroundColor, padding);
                 return new Png(img);
@@ -40,12 +40,12 @@ public abstract class TransferableImage<T> implements Transferable {
         },
         SVG("svg", svgDataFlavor(), DataFlavor.stringFlavor, DataFlavor.plainTextFlavor) {
             TransferableImage<?> paint(JComponent contentComponent, AffineTransform at,
-                                       int width, int height, Color backgroundColor, int padding) throws IOException {
+                                       int width, int height, Color backgroundColor, Padding padding) throws IOException {
                 DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
                 Document doc = domImpl.createDocument("http://www.w3.org/2000/svg", "svg", null);
                 SVGGraphics2D g = new SVGGraphics2D(doc);
                 double scale = JBUIScale.sysScale(contentComponent);
-                var size = new Dimension((int) (width * scale + 2 * padding), (int) (height * scale + 2 * padding));
+                var size = new Dimension((int) (width * scale + 2 * padding.getWidth()), (int) (height * scale + 2 * padding.getHeight()));
                 g.setSVGCanvasSize(size);
                 paint(g, contentComponent, at, width, height, backgroundColor, padding);
                 CharArrayWriter writer = new CharArrayWriter();
@@ -61,15 +61,15 @@ public abstract class TransferableImage<T> implements Transferable {
 
         static void paint(Graphics2D g,
                           JComponent contentComponent, AffineTransform at,
-                          int width, int height, Color backgroundColor, int padding) {
+                          int width, int height, Color backgroundColor, Padding padding) {
             double scale = JBUIScale.sysScale(contentComponent);
             int scaledWidth = (int) (width * scale);
             int scaledHeight = (int) (height * scale);
-            int imgWidth = scaledWidth + 2 * padding;
-            int imgHeight = scaledHeight + 2 * padding;
+            int imgWidth = scaledWidth + 2 * padding.getWidth();
+            int imgHeight = scaledHeight + 2 * padding.getHeight();
             g.setColor(backgroundColor);
             g.fillRect(0, 0, imgWidth, imgHeight);
-            g.translate(padding, padding);
+            g.translate(padding.getWidth(), padding.getHeight());
             g.clipRect(0, 0, scaledWidth, scaledHeight);
             g.transform(at);
             contentComponent.paint(g);
@@ -84,7 +84,7 @@ public abstract class TransferableImage<T> implements Transferable {
         }
 
         abstract TransferableImage<?> paint(JComponent contentComponent, AffineTransform at,
-                                            int width, int height, Color backgroundColor, int padding) throws IOException;
+                                            int width, int height, Color backgroundColor, Padding padding) throws IOException;
     }
 
     @NotNull

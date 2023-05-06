@@ -85,9 +85,10 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
         private JPanel myWholePanel;
         private JSlider mySlider;
         private JPanel mySaveDirectoryPanel;
-        private JTextField myPadding;
         private TextFieldWithHistoryWithBrowseButton mySaveDirectory;
         private JComboBox<TransferableImage.Format> myFormat;
+        private JTextField paddingHeightValue;
+        private JTextField paddingWidthValue;
 
         CopyImageOptionsProvider.State toState() {
             CopyImageOptionsProvider.State state = new CopyImageOptionsProvider.State();
@@ -100,7 +101,10 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
 
             state.myDirectoryToSave = StringUtil.nullize(mySaveDirectory.getText());
             try {
-                state.myPadding = Integer.parseInt(myPadding.getText());
+                state.myPadding = new Padding(
+                    Integer.parseInt(paddingHeightValue.getText()),
+                    Integer.parseInt(paddingWidthValue.getText())
+                );
             } catch (NumberFormatException ignored) {
             }
 
@@ -114,8 +118,9 @@ public class CopyImageConfigurable implements SearchableConfigurable, Configurab
             myRemoveCaret.setSelected(state.myRemoveCaret);
             mySlider.setValue((int) (state.myScale * SLIDER_SCALE));
             mySaveDirectory.setText(StringUtil.notNullize(state.myDirectoryToSave));
-            myPadding.setText(String.valueOf(state.myPadding));
             myFormat.setSelectedIndex(state.myFormat == null ? 0 : state.myFormat.ordinal());
+            paddingHeightValue.setText(String.valueOf(state.myPadding.getHeight()));
+            paddingWidthValue.setText(String.valueOf(state.myPadding.getWidth()));
         }
 
         void init() {

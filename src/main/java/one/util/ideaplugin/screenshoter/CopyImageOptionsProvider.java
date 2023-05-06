@@ -44,7 +44,7 @@ public class CopyImageOptionsProvider implements PersistentStateComponent<CopyIm
         public boolean myRemoveCaret = true;
         public boolean myChopIndentation = true;
         public String myDirectoryToSave = null;
-        public int myPadding = 0;
+        public Padding myPadding = Padding.EMPTY;
         public TransferableImage.Format myFormat = TransferableImage.Format.PNG;
 
         @Override
